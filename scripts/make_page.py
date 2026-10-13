@@ -30,27 +30,24 @@ def vid(src, cls='', group='motiv'):
 def cell(label, inner, cls=''):
     return f'<div class="cell {cls}">{inner}<div class="cell-label">{label}</div></div>'
 
-# ---------- motivation grid: row 1 = query | GT | ours ; row 2/3 = four baselines per paradigm ----------
-motiv_html = f'''
-<div class="mrow">
-  <div class="mrow-head"><span class="tag-ref">Reference</span></div>
-  <div class="mrow-cells">
-    {cell('Query mask &middot; Exo view, first frame', '<img src="static/motivation/query.jpg">', 'wide')}
-    {cell('Ground truth &middot; Ego view', vid('static/motivation/gt.mp4'))}
-    {cell('<b>XTrack (Ours)</b> &middot; Ego view', vid('static/motivation/ours.mp4'), 'ours')}
-  </div>
+# ---------- motivation grid (6 columns; left 2 columns hold the row description) ----------
+def mblock(title, lines, cls):
+    return f'<div class="mblock {cls}"><div class="mtitle">{title}</div>' + ''.join(f'<div class="mline">{l}</div>' for l in lines) + '</div>'
+
+motiv_html = f"""
+<div class="mgrid">
+  {cell('Query mask &middot; Exo view, first frame', '<img src="static/motivation/query.jpg">', 'wide')}
+  {cell('Ground truth &middot; Ego', vid('static/motivation/gt.mp4'))}
+  {cell('<b>XTrack (Ours)</b> &middot; Ego', vid('static/motivation/ours.mp4'), 'ours')}
+  {mblock('Exo2Ego, Ego-Exo4D', ['Query given in the <b>exo</b> view; masks predicted in the <b>ego</b> view.', 'The board leaves the ego view and <b>reappears</b> near the end.', '<span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines', '2&times; speed, synchronized'], 'info')}
+
+  {mblock('(a) Track-then-Match', ['&#10007; temporally inconsistent matching', '&#10007; false positives when the target is absent'], 'bad')}
+  {''.join(cell(name, vid(f'static/motivation/{m}_sam2qt.mp4')) for m, name in METHODS)}
+
+  {mblock('(b) Match-then-Track', ['&#10007; propagates an unreliable initial match', '&#10007; fails when the object reappears'], 'bad')}
+  {''.join(cell(name, vid(f'static/motivation/{m}_ffmsam2.mp4')) for m, name in METHODS)}
 </div>
-<div class="mrow">
-  <div class="mrow-head"><span class="tag-bad">(a) Track-then-Match</span>
-    <span class="note bad">&#10007; temporally inconsistent matching &nbsp; &#10007; false positives in the absence of the target</span></div>
-  <div class="mrow-cells">{''.join(cell(name, vid(f'static/motivation/{m}_sam2qt.mp4')) for m, name in METHODS)}</div>
-</div>
-<div class="mrow">
-  <div class="mrow-head"><span class="tag-bad">(b) Match-then-Track</span>
-    <span class="note bad">&#10007; propagates errors from an unreliable initial match &nbsp; &#10007; fails when the object reappears</span></div>
-  <div class="mrow-cells">{''.join(cell(name, vid(f'static/motivation/{m}_ffmsam2.mp4')) for m, name in METHODS)}</div>
-</div>
-'''
+"""
 
 def qual_cards(direction):
     qv = 'Ego' if direction == 'ego2exo' else 'Exo'
@@ -62,84 +59,52 @@ def qual_cards(direction):
 </div>''')
     return ''.join(cards)
 
-METHOD_SECTIONS = f'''
-<div class="method-block">
-  <img class="figure-img" src="static/images/fig2_architecture.png" alt="architecture"><div class="caption" style="margin-bottom:1rem">Overall architecture of XTrack.</div>
-  <h3 class="title is-5">1. Cross-view RGB-to-mask flow via video DiT repurposing</h3>
-  <div class="columns is-vcentered">
-    <div class="column">
-      <p>Pretrained video DiTs implicitly learn to preserve object identity under motion, occlusion and viewpoint change. We repurpose these priors
-      for mask prediction by <b>redefining the flow-matching transport endpoints from noise&rarr;RGB to RGB&rarr;mask</b>: the source state is the RGB latent
-      of the paired ego-exo videos (which already encodes scene layout, appearance and temporal context), and the target is the mask latent.
-      The model is trained to predict <code>v* = z<sub>mask</sub> &minus; z<sub>rgb</sub></code>, conditioned on the RGB videos and the one-sided query mask,
-      so the generative process is redirected toward query-conditioned mask prediction without discarding the DiT's spatiotemporal and semantic priors.</p>
-    </div>
-  </div>
+def card(icon, title, bullets, extra=''):
+    return f"""<div class="mcard"><div class="mcard-head"><span class="mcard-icon"><i class="fas {icon}"></i></span><span class="mcard-title">{title}</span></div>
+<ul class="mcard-list">{''.join(f'<li>{b}</li>' for b in bullets)}</ul>{extra}</div>"""
+
+METHOD_SECTIONS = f"""
+<img class="figure-img" src="static/images/fig2_architecture.png" alt="architecture">
+<div class="caption" style="margin-bottom:1.2rem">Overall architecture. Ego and exo videos enter a pretrained video DiT as a <b>diptych</b>; the model transports RGB latents to mask latents for both views at once.</div>
+
+<div class="mcards">
+  {card('fa-arrow-right-arrow-left', 'RGB &rarr; mask flow, not noise &rarr; RGB',
+        ['Flow-matching endpoints redefined: source = RGB latent, target = mask latent.',
+         'The source already encodes scene layout, appearance and motion, so the DiT only has to <b>convert evidence into masks</b>.',
+         'Keeps the video DiT\'s spatiotemporal and semantic priors intact.'])}
+  {card('fa-table-columns', 'One token space for both views',
+        ['Ego and exo frames are concatenated side by side; query mask conditions one side, the other side gets an empty mask.',
+         'Full 3D attention = <b>within-view</b> (tracking) + <b>cross-view</b> (matching) in every layer.',
+         'Ambiguity in one view is resolved with the other view, with no fixed initial match.'])}
+  {card('fa-bullseye', 'Focal attention alignment',
+        ['Cross-view attention can drift to distractors.',
+         'Supervise target-side foreground tokens to attend to query-side foreground.',
+         'Focal weight: strong when grounding is weak, off when already correct.'])}
+  {card('fa-code-compare', 'Hard negative conditioning',
+        ['Feed the <b>wrong object\'s mask</b> as a mismatched query.',
+         'Margin loss forces the two predictions apart.',
+         'Prediction depends on query identity, not on generic saliency.'])}
+  {card('fa-magnifying-glass-plus', 'Local context crop for small objects',
+        ['Object-centred crop encoded as extra tokens next to the global ego-exo tokens.',
+         'RoPE positions copied from the crop\'s <b>original coordinates</b>, so local detail stays spatially aligned with the scene.'])}
+  {card('fa-layer-group', 'Two-stage training',
+        ['<b>Stage 1</b> &mdash; paired frames with a <b>cycle-consistency</b> loss: predict the other view, map back, must recover the query mask.',
+         '<b>Stage 2</b> &mdash; video fine-tuning on dense curated pseudo-labels (below).',
+         'Inference: both views predicted jointly over time in a single pass.'],
+        '<img class="figure-img" src="static/images/fig3_cycle.png" alt="cycle consistency" style="margin-top:.5rem;max-width:360px">')}
 </div>
 
-<div class="method-block">
-  <h3 class="title is-5">2. Unified ego-exo token space (diptych)</h3>
-  <p>Ego and exo frames are spatially concatenated into a single <b>diptych</b> frame; the query mask conditions the query side while the other side receives an
-  empty mask. Full 3D attention over ego tokens, exo tokens and conditioning tokens yields a block structure: <i>within-view</i> attention (ego&rarr;ego, exo&rarr;exo)
-  captures spatial and temporal interactions inside each video, while <i>cross-view</i> attention (ego&rarr;exo, exo&rarr;ego) establishes object correspondence.
-  Because every layer can access cross-view evidence, ambiguity in one view is resolved with the other view during prediction instead of relying on a fixed initial match,
-  so cross-view matching and within-view temporal propagation are modeled jointly in a single process.</p>
+<h3 class="title is-5" style="margin-top:2rem">Pseudo-label curation: 1 FPS annotations &rarr; dense, verified labels</h3>
+<video class="figure-img" src="static/method/pseudolabel.mp4" muted autoplay loop playsinline preload="metadata" style="border-radius:10px"></video>
+<div class="caption">Illustration on an Ego-Exo4D clip (2&times; speed). SAM2 is propagated <span style="color:#b05cd6">forward</span> and <span style="color:#b08a00">backward</span> between consecutive 1-FPS anchors (yellow border).
+Chunks where the two disagree are flagged and refined; the curated labels (right) keep only candidates verified against the static exo view.
+<a href="static/images/fig4_pseudolabel.png" target="_blank">Pipeline figure from the paper</a>.</div>
+<div class="columns" style="margin-top:.8rem">
+  <div class="column"><div class="step"><span class="step-n">a</span><div><b>Bidirectional propagation</b><br>Forward and backward SAM2 between anchors; low forward/backward mIoU marks unreliable chunks.</div></div></div>
+  <div class="column"><div class="step"><span class="step-n">b</span><div><b>Cross-view geometric verification</b><br>VGGT similarity between each ego candidate and the exo pseudo-GT picks the consistent one.</div></div></div>
+  <div class="column"><div class="step"><span class="step-n">c</span><div><b>Within-view semantic verification</b><br>DINOv3 similarity to the ego anchor removes the remaining wrong masks.</div></div></div>
 </div>
-
-<div class="method-block">
-  <h3 class="title is-5">3. Enhancing cross-view object grounding</h3>
-  <div class="columns">
-    <div class="column">
-      <div class="box-lite"><b>Focal attention alignment.</b> A unified token space does not guarantee instance-level alignment: cross-view attention may diffuse over
-      background or distractors and the target-side prediction drifts to a wrong instance. We directly supervise the cross-view attention blocks so that
-      target-side foreground tokens attend to query-side foreground tokens, with a <b>focal weight</b> that is strong when foreground attention is weak and
-      vanishes when the model is already well grounded. The same loss covers Ego2Exo and Exo2Ego by swapping query and target sides.</div>
-    </div>
-    <div class="column">
-      <div class="box-lite"><b>Hard negative conditioning.</b> Video diffusion models tend to attend to semantically similar regions, producing query-agnostic
-      predictions when similar objects coexist. Given the correct query mask and a <b>mismatched query mask from another object</b>, a margin loss forces the two
-      target-side predictions to differ, so the model relies on the query identity rather than generic object saliency.</div>
-    </div>
-    <div class="column">
-      <div class="box-lite"><b>Local context crop for small objects.</b> Small objects occupy only a few tokens in the full-scene latent. An object-centered
-      crop is encoded into additional local tokens and concatenated with the global ego-exo tokens; its <b>RoPE positions are taken from the crop's original
-      coordinates</b> in the full frame, so high-resolution object evidence stays aligned with the global token layout.</div>
-    </div>
-  </div>
-</div>
-
-<div class="method-block">
-  <h3 class="title is-5">4. Stage-wise training: 2D pretraining with cycle consistency, then video fine-tuning</h3>
-  <div class="columns is-vcentered">
-    <div class="column is-8">
-      <p>Learning correspondence and temporal consistency at once is unstable: weak early correspondence is carried through time and causes identity drift.
-      We therefore first train on <b>paired ego-exo frames</b>. The model predicts the mask in the other view and then maps it back to the original view;
-      a <b>cycle-consistency loss</b> between the reconstructed and the original query mask validates the correspondence and discourages shortcut learning.
-      We then <b>fine-tune on video sequences</b> with dense pseudo-labels (below), so the model learns to maintain identity under motion, occlusion and
-      reappearance while keeping cross-view grounding. At inference, both views are predicted jointly over time in one pass.</p>
-    </div>
-    <div class="column is-4"><img class="figure-img" src="static/images/fig3_cycle.png" alt="cycle consistency"><div class="caption">2D pretraining with cycle consistency.</div></div>
-  </div>
-</div>
-
-<div class="method-block">
-  <h3 class="title is-5">5. Pseudo-label curation pipeline</h3>
-  <div class="columns is-vcentered">
-    <div class="column is-6"><img class="figure-img" src="static/images/fig4_pseudolabel.png" alt="pseudo-label pipeline"></div>
-    <div class="column is-6">
-      <p>Ego-Exo4D provides 30 FPS video but masks only at 1 FPS, and SAM2 propagation alone is unreliable in the ego view. Our pipeline turns sparse annotations into
-      dense, reliable supervision:</p>
-      <ul class="method-list">
-        <li><b>(a) Bidirectional propagation and unreliable-region detection.</b> Propagate forward and backward from two annotated anchors; chunks with low
-        forward/backward mIoU are flagged for refinement.</li>
-        <li><b>(b) Cross-view geometric verification.</b> Static exo cameras give stable pseudo ground truth. Geometry-aware VGGT features compare each ego candidate
-        with the exo reference, and the candidate whose similarity passes a threshold is kept.</li>
-        <li><b>(c) Within-view semantic verification.</b> Remaining candidates are checked against the ego anchor with DINOv3 similarity; inconsistent masks are discarded.</li>
-      </ul>
-    </div>
-  </div>
-</div>
-'''
+"""
 
 html = f'''<!DOCTYPE html>
 <html lang="en">
@@ -155,7 +120,7 @@ html = f'''<!DOCTYPE html>
   :root {{ --green:#1fb84a; --red:#e03131; --ink:#222; --muted:#6b6b6b; --line:#e5e5e5; }}
   body {{ font-family:'Google Sans','Noto Sans',sans-serif; color:var(--ink); }}
   .hero .title {{ font-size:2.1rem; line-height:1.25; }}
-  .venue {{ display:inline-block; font-weight:700; letter-spacing:.04em; color:#3b5bdb; border:2px solid #3b5bdb; border-radius:999px; padding:.15rem .9rem; margin-bottom:.8rem; }}
+  .venue {{ display:inline-block; font-weight:700; font-size:1.6rem; letter-spacing:.03em; color:#3b5bdb; border:2px solid #3b5bdb; border-radius:999px; padding:.2rem 1.4rem; margin:.9rem 0 .2rem; }}
   .authors {{ font-size:1.15rem; line-height:1.9; }}
   .authors .arow {{ display:block; }}
   .authors a {{ color:#3273dc; margin:0 .55rem; }}
@@ -168,30 +133,32 @@ html = f'''<!DOCTYPE html>
   .caption {{ font-size:.92rem; color:var(--muted); margin-top:.5rem; text-align:center; }}
   .lead {{ max-width:900px; margin:0 auto 1rem; text-align:center; }}
   /* ---- motivation grid ---- */
-  .motiv {{ border:1px solid var(--line); border-radius:12px; padding:.6rem 1rem .4rem; background:#fafafa; }}
-  .mrow {{ padding:.5rem 0 .4rem; border-top:1px dashed var(--line); }}
-  .mrow:first-child {{ border-top:none; }}
-  .mrow-head {{ display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:.4rem; }}
-  .tag-ref, .tag-bad, .tag-good {{ font-weight:700; font-size:.9rem; padding:.1rem .6rem; border-radius:6px; }}
-  .tag-ref {{ background:#e9ecef; }}
-  .tag-bad {{ background:#ffe3e3; color:#c92a2a; }}
-  .tag-good {{ background:#d3f9d8; color:#2b8a3e; }}
-  .note {{ font-size:.9rem; font-weight:600; }}
-  .note.bad {{ color:var(--red); }}
-  .mrow-cells {{ display:grid; grid-template-columns:repeat(4, 1fr); gap:.6rem; }}
+  .motiv {{ border:1px solid var(--line); border-radius:12px; padding:.6rem; background:#fafafa; }}
+  .fig1 {{ max-width:960px; margin:0 auto; }}
+  .mgrid {{ display:grid; grid-template-columns:repeat(6, 1fr); gap:.45rem; align-items:start; }}
+  .mblock {{ grid-column:span 2; border-radius:8px; padding:.55rem .7rem; font-size:.82rem; line-height:1.35; }}
+  .mblock.info {{ background:#eef1f5; }}
+  .mblock.bad {{ background:#fff0f0; color:#b02a2a; }}
+  .mtitle {{ font-weight:700; font-size:.95rem; margin-bottom:.25rem; }}
+  .mline {{ margin-bottom:.15rem; }}
+  .mblock .sw {{ display:inline-block; width:10px; height:10px; border-radius:2px; vertical-align:middle; }}
   .cell video, .cell img {{ width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#000; display:block; }}
   .cell.wide {{ grid-column:span 2; }}
-  .cell.wide img {{ aspect-ratio:796/448; object-fit:cover; }}
+  .cell.wide img {{ aspect-ratio:2/1; object-fit:cover; }}
   .cell.ours video {{ outline:3px solid var(--green); outline-offset:-3px; }}
   .cell-label {{ font-size:.8rem; color:var(--muted); text-align:center; margin-top:.25rem; }}
   .legend {{ font-size:.9rem; color:var(--muted); margin-top:.6rem; }}
   .legend .sw {{ display:inline-block; width:12px; height:12px; border-radius:3px; vertical-align:middle; margin:0 4px 0 10px; }}
   /* ---- method ---- */
-  .method-block {{ margin-bottom:1.8rem; }}
-  .method-block p, .method-list {{ text-align:justify; font-size:1rem; }}
-  .method-list li {{ margin-bottom:.4rem; }}
-  .box-lite {{ background:#f8f9fa; border:1px solid var(--line); border-radius:10px; padding:.9rem; font-size:.95rem; height:100%; }}
-  code {{ background:#f1f3f5; color:#222; }}
+  .mcards {{ display:grid; grid-template-columns:repeat(3, 1fr); gap:.9rem; }}
+  .mcard {{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:.9rem 1rem; box-shadow:0 1px 3px rgba(0,0,0,.04); }}
+  .mcard-head {{ display:flex; align-items:center; gap:.6rem; margin-bottom:.5rem; }}
+  .mcard-icon {{ width:32px; height:32px; border-radius:8px; background:#edf2ff; color:#3b5bdb; display:inline-flex; align-items:center; justify-content:center; }}
+  .mcard-title {{ font-weight:700; font-size:1rem; }}
+  .mcard-list {{ list-style:disc; padding-left:1.1rem; font-size:.9rem; color:#333; }}
+  .mcard-list li {{ margin-bottom:.3rem; }}
+  .step {{ display:flex; gap:.7rem; font-size:.92rem; }}
+  .step-n {{ flex:0 0 26px; height:26px; border-radius:50%; background:#d3f9d8; color:#2b8a3e; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }}
   /* ---- qualitative ---- */
   .qual-grid {{ display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; }}
   .qual-card {{ border:1px solid var(--line); border-radius:12px; padding:.7rem; background:#fff; display:grid; grid-template-columns:140px 1fr; gap:.7rem; align-items:start; }}
@@ -203,7 +170,7 @@ html = f'''<!DOCTYPE html>
   .ctrl button {{ margin-right:.4rem; }}
   pre.bib {{ background:#f5f5f5; border-radius:8px; padding:1rem; font-size:.9rem; white-space:pre-wrap; }}
   footer {{ color:var(--muted); font-size:.9rem; }}
-  @media (max-width: 900px) {{ .mrow-cells {{ grid-template-columns:repeat(2, 1fr); }} .qual-grid {{ grid-template-columns:1fr; }} .qual-card {{ grid-template-columns:1fr; }} }}
+  @media (max-width: 900px) {{ .mcards {{ grid-template-columns:1fr; }} .mgrid {{ grid-template-columns:repeat(3, 1fr); }} .mblock {{ grid-column:span 3; }} .qual-grid {{ grid-template-columns:1fr; }} .qual-card {{ grid-template-columns:1fr; }} }}
 </style>
 </head>
 <body>
@@ -211,13 +178,13 @@ html = f'''<!DOCTYPE html>
 <section class="hero">
   <div class="hero-body">
     <div class="container is-max-desktop has-text-centered">
-      <div class="venue">{VENUE}</div>
       <h1 class="title publication-title">{TITLE}</h1>
       <div class="authors">
         {''.join('<span class="arow">' + ''.join(f'<a href="#">{n}</a><sup>{s}</sup>' for n, s in row) + '</span>' for row in AUTHOR_ROWS)}
       </div>
       <div class="affil">KAIST AI</div>
       <div class="eq"><sup>*</sup>Equal contribution</div>
+      <div class="venue">{VENUE}</div>
       <div class="link-block" style="margin-top:1rem">
         <a class="button is-dark is-rounded" href="static/paper.pdf"><span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper</span></a>
         <a class="button is-dark is-rounded" href="#"><span class="icon"><i class="fas fa-scroll"></i></span><span>arXiv</span></a>
@@ -241,19 +208,15 @@ html = f'''<!DOCTYPE html>
     <p class="lead">Given a first-frame query mask in one view, the task is to recover temporally coherent masks of the same object in <b>both</b> views.
     Extending frame-level matchers with a tracker yields two decoupled pipelines, and both break under temporary disappearance and viewpoint change.
     XTrack predicts masks jointly across views and time within a single video DiT.</p>
-    <img class="figure-img" src="static/images/fig1_paradigms.png" alt="paradigms">
+    <img class="figure-img fig1" src="static/images/fig1_paradigms.png" alt="paradigms">
     <div class="caption">(a) Track-then-Match propagates the query mask in the query view and matches it per frame. (b) Match-then-Track estimates one initial match and tracks each view independently. (c) XTrack jointly models cross-view correspondence and temporal dynamics.</div>
 
     <div class="ctrl has-text-centered" style="margin-top:1rem">
       <button class="button is-small" onclick="syncRestart('motiv')"><i class="fas fa-rotate-left"></i>&nbsp;Restart</button>
       <button class="button is-small" onclick="syncToggle('motiv')" id="btn-motiv"><i class="fas fa-pause"></i>&nbsp;Pause</button>
-      <span class="speed-note">Synchronized, 2&times; speed. Exo2Ego: query in the exo view, prediction in the ego view (Ego-Exo4D). The object leaves the ego view and reappears near the end.</span>
+      <span class="speed-note">Synchronized videos, 2&times; speed.</span>
     </div>
     <div class="motiv">{motiv_html}</div>
-    <div class="legend has-text-centered">
-      <span class="sw" style="background:var(--green)"></span> ground truth / query mask / XTrack &nbsp;
-      <span class="sw" style="background:var(--red)"></span> baseline prediction
-    </div>
   </div>
 </section>
 
@@ -270,12 +233,12 @@ html = f'''<!DOCTYPE html>
     <p class="lead">From a single query mask (left), XTrack predicts the object masks in <b>both</b> the ego and exo videos (right) in one pass. Videos are played at 2&times; speed.</p>
     <div class="tabs is-toggle is-centered" id="qual-tabs">
       <ul>
-        <li class="is-active" data-tab="ego2exo"><a>Ego &rarr; Exo &nbsp;<small>(query in ego view)</small></a></li>
-        <li data-tab="exo2ego"><a>Exo &rarr; Ego &nbsp;<small>(query in exo view)</small></a></li>
+        <li class="is-active" data-tab="exo2ego"><a>Exo &rarr; Ego &nbsp;<small>(query in exo view)</small></a></li>
+        <li data-tab="ego2exo"><a>Ego &rarr; Exo &nbsp;<small>(query in ego view)</small></a></li>
       </ul>
     </div>
-    <div class="qual-grid" id="qual-ego2exo">{qual_cards('ego2exo')}</div>
-    <div class="qual-grid" id="qual-exo2ego" style="display:none">{qual_cards('exo2ego')}</div>
+    <div class="qual-grid" id="qual-exo2ego">{qual_cards('exo2ego')}</div>
+    <div class="qual-grid" id="qual-ego2exo" style="display:none">{qual_cards('ego2exo')}</div>
   </div>
 </section>
 

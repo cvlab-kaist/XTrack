@@ -97,14 +97,13 @@ QUAL_SAMPLES = {
                 ('val600_cherry', '2d042a82-6409-4986-8bfb-af031f5e061e', 'scrambled_egg_0'),
                 ('val600_cherry', '79a728ac-d543-4a7a-bf6d-132a676ca685', 'violin_bow'),
                 ('val600_cherry', '5c12c6e3-d34e-4e9a-bd7f-74aed58427a7', 'disposable_swab_with_package_0'),
-                ('val600_cherry', '2dc49d13-5347-4d4b-8506-5510f2ae0b84', 'bicycle_0')],
+                ],
     'exo2ego': [('val600_cherry_whole', '2ca53d8d-0120-4dad-a856-c8f20aaa2cc4', 'chopping_board_0'),
                 ('val600_cherry_whole', '0fe5b647-cdd0-43e9-8710-b33a2e0f83ef', 'piano'),
                 ('val600_cherry_whole', 'ae2207b2-9b33-4f6a-aeb5-e2718a253c3b', 'sheet_music'),
                 ('val600_cherry', '32dfc6fe-c801-4ce5-bb39-8841fca7a075', 'soccer_ball'),
                 ('val600_cherry', '9e08e1e7-179a-4dac-bd0e-6e98e47407d2', 'hoop'),
                 ('val600_cherry', 'dc1600e9-dd79-4700-882a-9f53cdd29d20', 'CPR_dummy'),
-                ('val600_cherry', 'f291d174-596d-471f-836b-993315197824', 'guitar'),
                 ('val600_cherry', '2d042a82-6409-4986-8bfb-af031f5e061e', 'scrambled_egg_0')],
 }
 

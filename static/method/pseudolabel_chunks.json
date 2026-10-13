@@ -1,0 +1,122 @@
+[
+ {
+  "a": 8520,
+  "b": 8550,
+  "miou": 0.9865902620205254,
+  "decision": "reliable"
+ },
+ {
+  "a": 8550,
+  "b": 8580,
+  "miou": 0.9872851194956188,
+  "decision": "reliable"
+ },
+ {
+  "a": 8580,
+  "b": 8610,
+  "miou": 0.9846784665403113,
+  "decision": "reliable"
+ },
+ {
+  "a": 8610,
+  "b": 8640,
+  "miou": 0.9802517111444776,
+  "decision": "reliable"
+ },
+ {
+  "a": 8640,
+  "b": 8670,
+  "miou": 0.9452826104238542,
+  "decision": "reliable"
+ },
+ {
+  "a": 8670,
+  "b": 8700,
+  "miou": 0.9715896520477472,
+  "decision": "reliable"
+ },
+ {
+  "a": 8700,
+  "b": 8730,
+  "miou": 0.9596151571272883,
+  "decision": "reliable"
+ },
+ {
+  "a": 8730,
+  "b": 8760,
+  "miou": 0.9443632518430645,
+  "decision": "reliable"
+ },
+ {
+  "a": 8760,
+  "b": 8790,
+  "miou": 0.9862684966089056,
+  "decision": "reliable"
+ },
+ {
+  "a": 8790,
+  "b": 8820,
+  "miou": 0.9516704135569907,
+  "decision": "reliable"
+ },
+ {
+  "a": 8820,
+  "b": 8850,
+  "miou": 0.9236051628346938,
+  "decision": "reliable"
+ },
+ {
+  "a": 8850,
+  "b": 8880,
+  "miou": 1.0,
+  "decision": "no object"
+ },
+ {
+  "a": 8880,
+  "b": 8910,
+  "miou": 1.0,
+  "decision": "no object"
+ },
+ {
+  "a": 8910,
+  "b": 8940,
+  "miou": 1.0,
+  "decision": "no object"
+ },
+ {
+  "a": 8940,
+  "b": 8970,
+  "miou": 1.0,
+  "decision": "no object"
+ },
+ {
+  "a": 8970,
+  "b": 9000,
+  "miou": 0.0,
+  "decision": "discarded"
+ },
+ {
+  "a": 9000,
+  "b": 9030,
+  "miou": 0.0,
+  "decision": "discarded"
+ },
+ {
+  "a": 9030,
+  "b": 9060,
+  "miou": 0.0,
+  "decision": "discarded"
+ },
+ {
+  "a": 9060,
+  "b": 9090,
+  "miou": 1.0,
+  "decision": "no object"
+ },
+ {
+  "a": 9090,
+  "b": 9120,
+  "miou": 0.8868774413909271,
+  "decision": "reliable"
+ }
+]

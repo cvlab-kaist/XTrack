@@ -98,20 +98,6 @@
   "query": "static/qual/ego2exo/5c12c6e3_disposable_swab_with_package_0_query.jpg"
  },
  {
-  "direction": "ego2exo",
-  "uid": "2dc49d13-5347-4d4b-8506-5510f2ae0b84",
-  "object": "bicycle_0",
-  "tag": "2dc49d13_bicycle_0",
-  "query_cam": "aria06_214-1",
-  "query_frame": 390,
-  "frame_start": 390,
-  "n_frames": 598,
-  "ego_JF": 0.763,
-  "exo_JF": 0.607,
-  "video": "static/qual/ego2exo/2dc49d13_bicycle_0.mp4",
-  "query": "static/qual/ego2exo/2dc49d13_bicycle_0_query.jpg"
- },
- {
   "direction": "exo2ego",
   "uid": "2ca53d8d-0120-4dad-a856-c8f20aaa2cc4",
   "object": "chopping board_0",
@@ -194,20 +180,6 @@
   "exo_JF": 0.923,
   "video": "static/qual/exo2ego/dc1600e9_CPR_dummy.mp4",
   "query": "static/qual/exo2ego/dc1600e9_CPR_dummy_query.jpg"
- },
- {
-  "direction": "exo2ego",
-  "uid": "f291d174-596d-471f-836b-993315197824",
-  "object": "guitar",
-  "tag": "f291d174_guitar",
-  "query_cam": "gp04",
-  "query_frame": 4800,
-  "frame_start": 4800,
-  "n_frames": 598,
-  "ego_JF": 0.777,
-  "exo_JF": 0.913,
-  "video": "static/qual/exo2ego/f291d174_guitar.mp4",
-  "query": "static/qual/exo2ego/f291d174_guitar_query.jpg"
  },
  {
   "direction": "exo2ego",
