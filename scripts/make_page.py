@@ -39,7 +39,7 @@ motiv_html = f"""
   {cell('Query mask &middot; Exo view, first frame', '<img src="static/motivation/query.jpg">', 'wide')}
   {cell('Ground truth', vid('static/motivation/gt.mp4'))}
   {cell('<b>XTrack (Ours)</b>', vid('static/motivation/ours.mp4'), 'ours')}
-  {mblock('Exo2Ego &middot; Ego-Exo4D dataset', ['Query: <b>exo</b> &rarr; prediction: <b>ego</b>', '<span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines', '2&times; speed'], 'info')}
+  {mblock('Exo2Ego (Ego-Exo4D dataset)', ['Query: <b>exo</b> &rarr; prediction: <b>ego</b>', '<span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines', '2&times; speed'], 'info')}
 
   {mblock('(a) Track-then-Match', ['<span class="x">&#10007;</span> temporally inconsistent matching', '<span class="x">&#10007;</span> false positives when the target is absent'], 'bad')}
   {''.join(cell(name, vid(f'static/motivation/{m}_sam2qt.mp4')) for m, name in METHODS)}
@@ -126,15 +126,14 @@ html = f'''<!DOCTYPE html>
   .motiv {{ border:1px solid var(--line); border-radius:12px; padding:.6rem; background:#fafafa; }}
   .fig1 {{ max-width:960px; margin:0 auto; }}
   .mgrid {{ display:grid; grid-template-columns:repeat(6, 1fr); gap:.45rem; align-items:start; }}
-  .mblock {{ grid-column:span 2; border-radius:8px; padding:.55rem .7rem; font-size:.82rem; line-height:1.35; }}
-  .mblock.info {{ background:#eef1f5; font-size:1.2rem; line-height:1.45; }}
-  .mblock.info .mtitle {{ font-size:1.3rem; }}
+  .mblock {{ grid-column:span 2; border-radius:8px; padding:.55rem .7rem; font-size:1rem; line-height:1.4; }}
+  .mblock.info {{ background:#eef1f5; }}
   .mblock.info .sw {{ width:16px; height:16px; }}
   .mblock.bad {{ background:none; padding-left:.2rem; }}
   .mblock.bad .mtitle {{ color:var(--ink); }}
   .mblock.bad .mline {{ color:var(--ink); }}
   .x {{ color:var(--red); font-weight:700; }}
-  .mtitle {{ font-weight:700; font-size:.95rem; margin-bottom:.25rem; }}
+  .mtitle {{ font-weight:700; font-size:1.15rem; margin-bottom:.3rem; }}
   .mline {{ margin-bottom:.15rem; }}
   .mblock .sw {{ display:inline-block; width:10px; height:10px; border-radius:2px; vertical-align:middle; }}
   .cell video, .cell img {{ width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#000; display:block; }}
@@ -204,9 +203,9 @@ html = f'''<!DOCTYPE html>
   <div class="container is-max-widescreen">
     <h2 class="title is-4 section-title has-text-centered">Motivation: why joint view-time mask prediction?</h2>
     <p class="lead">Given a first-frame query mask in one view, the task is to recover temporally coherent masks of the same object in <b>both</b> views.
-    Extending frame-level matchers with a tracker yields two decoupled pipelines: <b>(a) Track-then-Match</b> propagates the query mask in the query view and matches it per frame,
-    and <b>(b) Match-then-Track</b> estimates one initial match and tracks each view independently. Both break under temporary disappearance and viewpoint change.
-    <b>(c) XTrack</b> jointly models cross-view correspondence and temporal dynamics within a single video DiT.</p>
+    Frame-level matchers must be paired with a tracker: <b>(a) Track-then-Match</b> propagates the query mask and matches it per frame,
+    <b>(b) Match-then-Track</b> matches once and tracks each view independently. Both break under disappearance and viewpoint change.
+    <b>(c) XTrack</b> models cross-view correspondence and temporal dynamics jointly in a single video DiT.</p>
     <img class="figure-img fig1" src="static/images/fig1_paradigms.png" alt="paradigms">
 
     <div class="ctrl has-text-centered" style="margin-top:1rem">
