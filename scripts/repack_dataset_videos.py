@@ -69,5 +69,5 @@ if __name__ == '__main__':
     if 'dino' not in sys.argv[1:]:
         repack_vggt(D / 'vggt_basketball.mp4', D / 'vggt_basketball_packed.mp4')
         repack_vggt(D / 'vggt_bike.mp4', D / 'vggt_bike_packed.mp4')
-        repack_vggt(D / 'vggt_soccer.mp4', D / 'vggt_soccer_packed.mp4', 110)
-    repack_dino(D / 'dino_soccer.mp4', D / 'dino_soccer_packed.mp4', 110)
+        repack_vggt(D / 'vggt_soccer.mp4', D / 'vggt_soccer_packed.mp4', 100)
+    repack_dino(D / 'dino_soccer.mp4', D / 'dino_soccer_packed.mp4', 100)
