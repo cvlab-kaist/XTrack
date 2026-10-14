@@ -69,12 +69,6 @@ Ego-Exo4D provides 30 FPS video but object masks only at 1 FPS. Our curation pip
 - **[2026/10]** Project page is online: https://cvlab-kaist.github.io/XTrack/
 - **[2026/09]** XTrack is accepted to **NeurIPS 2026**!
 
-## 📝 TODO
-
-- [ ] arXiv preprint
-- [ ] Inference code and pretrained checkpoints
-- [ ] Training code
-
 ## 📄 Citation
 
 ```bibtex
