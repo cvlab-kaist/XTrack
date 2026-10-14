@@ -34,5 +34,8 @@ class RangeHandler(SimpleHTTPRequestHandler):
 if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
     os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-    print(f'serving project page on http://127.0.0.1:{port}/', flush=True)
+    import socket, threading
+    class V6Server(ThreadingHTTPServer): address_family = socket.AF_INET6
+    print(f'serving project page on http://127.0.0.1:{port}/ and http://[::1]:{port}/', flush=True)
+    threading.Thread(target=V6Server(('::1', port), RangeHandler).serve_forever, daemon=True).start()
     ThreadingHTTPServer(('127.0.0.1', port), RangeHandler).serve_forever()
