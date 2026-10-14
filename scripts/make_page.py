@@ -71,29 +71,29 @@ METHOD_SECTIONS = f"""
   {card('fa-arrow-right-arrow-left', 'RGB-to-mask flow', ['Flow matching from the RGB latent to the mask latent, keeping the video DiT priors.'])}
   {card('fa-table-columns', 'Unified ego-exo tokens', ['Both views in one diptych; cross-view matching and tracking in the same attention.'])}
   {card('fa-bullseye', 'Focal attention alignment', ['Cross-view attention is supervised to land on the query object.'])}
-  {card('fa-code-compare', 'Hard negative conditioning', ['A mismatched query must give a different prediction.'])}
+  {card('fa-code-compare', 'Hard negative conditioning', ['The same ego-exo videos are run twice: once with the correct query mask and once with the mask of another object. A margin loss on the two target-side predictions forces them apart, so the output follows the query identity.'])}
   {card('fa-magnifying-glass-plus', 'Local context crop', ['Object crop tokens with original RoPE positions for small objects.'])}
-  {card('fa-layer-group', 'Two-stage training', ['Image-level cycle-consistency pretraining, then video fine-tuning on curated pseudo-labels.'],
-        '<img class="figure-img" src="static/images/fig3_cycle.png" alt="cycle consistency" style="margin-top:.5rem;max-width:300px">')}
+  {card('fa-layer-group', 'Two-stage training', ['Image-level cycle-consistency pretraining, then video fine-tuning on curated pseudo-labels.'])}
 </div>
 
 <h3 class="title is-5" style="margin-top:2rem">Pseudo-label curation: 1 FPS annotations &rarr; dense, verified labels</h3>
+<img class="figure-img" src="static/images/fig4_pseudolabel.png" alt="pseudo-label pipeline" style="max-width:900px;margin:0 auto .8rem">
 <div class="columns" style="margin-top:.2rem">
   <div class="column"><div class="step"><span class="step-n">a</span><div><b>Bidirectional propagation</b><br>Forward and backward SAM2 between anchors; low agreement marks unreliable chunks.</div></div></div>
-  <div class="column"><div class="step"><span class="step-n">b</span><div><b>Cross-view geometric verification</b><br>VGGT similarity to the exo view picks the consistent candidate.</div></div></div>
-  <div class="column"><div class="step"><span class="step-n">c</span><div><b>Within-view semantic verification</b><br>DINOv3 similarity to the ego anchor discards the remaining wrong masks.</div></div></div>
+  <div class="column"><div class="step"><span class="step-n">b</span><div><b>Cross-view geometric verification</b><br>VGGT similarity to the exo view selects one of the two candidates.</div></div></div>
+  <div class="column"><div class="step"><span class="step-n">c</span><div><b>Within-view semantic verification</b><br>DINOv3 similarity to the first-frame ego anchor discards chunks that are still wrong.</div></div></div>
 </div>
-<div class="caption" style="text-align:left;margin-bottom:.6rem"><a href="static/images/fig4_pseudolabel.png" target="_blank">Pipeline figure from the paper</a></div>
 
-<h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">(b) Cross-view geometric verification with VGGT</h4>
+<h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">(b) Cross-view geometric verification</h4>
 <p class="dsnote">Exo query (left), the forward (red) and backward (blue) ego candidates, and the candidate selected by VGGT similarity to the exo view (right).</p>
-<div class="dsrow"><video class="sync" data-group="ds1" src="static/dataset/vggt_basketball_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Basketball &mdash; forward and backward disagree; VGGT selects the candidate consistent with the exo view.</div></div>
-<div class="dsrow"><video class="sync" data-group="ds2" src="static/dataset/vggt_bike_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Bike repair &mdash; the wheel hub is small in the ego view, but the exo reference still disambiguates the candidates.</div></div>
+<div class="dsrow"><video class="sync" data-group="ds1" src="static/dataset/vggt_basketball_packed.mp4" muted playsinline loop preload="metadata"></video></div>
+<div class="dsrow"><video class="sync" data-group="ds2" src="static/dataset/vggt_bike_packed.mp4" muted playsinline loop preload="metadata"></video></div>
 
-<h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">(c) When geometric verification fails, semantic verification discards the chunk</h4>
-<p class="dsnote">Small, fast-moving objects can fool the geometric check. Here VGGT selects a candidate that is not the ball; its DINOv3 similarity to the ego anchor is low, so the chunk is discarded instead of entering the training set.</p>
-<div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/vggt_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Cross-view check: VGGT picks the wrong candidate (soccer ball).</div></div>
-<div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/dino_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Within-view check on the same chunk: the ego first-frame anchor (left, green) is the reference; DINOv3 similarity of the candidates to the anchor is low &rarr; chunk discarded.</div></div>
+<h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">(b) + (c) Complementary verification on one chunk</h4>
+<p class="dsnote">Geometric verification only <i>selects</i> between the forward and backward candidates, so it cannot recover a chunk where both candidates are wrong.
+Semantic verification complements it: the selected candidate is compared with the first-frame ego anchor, and chunks with low similarity are discarded.</p>
+<div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/vggt_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label"><b>Cross-view geometric verification</b> &mdash; both candidates miss the ball, so selecting one of them is not enough.</div></div>
+<div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/dino_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label"><b>Within-view semantic verification</b> &mdash; compared with the first-frame ego anchor (left, green), the candidates have low DINOv3 similarity and the chunk is discarded.</div></div>
 """
 
 html = f'''<!DOCTYPE html>
@@ -199,10 +199,10 @@ html = f'''<!DOCTYPE html>
   <div class="container is-max-widescreen">
     <h2 class="title is-4 section-title has-text-centered">Motivation: why joint view-time mask prediction?</h2>
     <p class="lead">Given a first-frame query mask in one view, the task is to recover temporally coherent masks of the same object in <b>both</b> views.
-    Extending frame-level matchers with a tracker yields two decoupled pipelines, and both break under temporary disappearance and viewpoint change.
-    XTrack predicts masks jointly across views and time within a single video DiT.</p>
+    Extending frame-level matchers with a tracker yields two decoupled pipelines: <b>(a) Track-then-Match</b> propagates the query mask in the query view and matches it per frame,
+    and <b>(b) Match-then-Track</b> estimates one initial match and tracks each view independently. Both break under temporary disappearance and viewpoint change.
+    <b>(c) XTrack</b> jointly models cross-view correspondence and temporal dynamics within a single video DiT.</p>
     <img class="figure-img fig1" src="static/images/fig1_paradigms.png" alt="paradigms">
-    <div class="caption">(a) Track-then-Match propagates the query mask in the query view and matches it per frame.<br>(b) Match-then-Track estimates one initial match and tracks each view independently.<br>(c) XTrack jointly models cross-view correspondence and temporal dynamics.</div>
 
     <div class="ctrl has-text-centered" style="margin-top:1rem">
       <button class="button is-small" onclick="syncRestart('motiv')"><i class="fas fa-rotate-left"></i>&nbsp;Restart</button>
@@ -223,7 +223,8 @@ html = f'''<!DOCTYPE html>
 <section class="section pt-0">
   <div class="container is-max-widescreen">
     <h2 class="title is-4 section-title has-text-centered">Qualitative results</h2>
-    <p class="lead">From a single query mask (left), XTrack predicts the object masks in <b>both</b> the ego and exo videos (right) in one pass. Videos are played at 2&times; speed.</p>
+    <p class="lead">From a single query mask (left), XTrack predicts the object masks in <b>both</b> the ego and exo videos (right) in one pass.
+    The predicted masks stay on the queried object in both views through viewpoint changes, occlusions and re-appearance, without any per-frame query. Videos are played at 2&times; speed.</p>
     <div class="tabs is-toggle is-centered" id="qual-tabs">
       <ul>
         <li class="is-active" data-tab="exo2ego"><a>Exo &rarr; Ego &nbsp;<small>(query in exo view)</small></a></li>
