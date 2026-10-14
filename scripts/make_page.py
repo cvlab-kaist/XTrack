@@ -52,15 +52,25 @@ motiv_html = f"""
 </div>
 """
 
-def qual_cards(direction):
+def qual_carousel(direction):
     qv = 'Ego' if direction == 'ego2exo' else 'Exo'
-    cards = []
-    for s in [q for q in qual if q['direction'] == direction]:
-        cards.append(f'''<div class="qual-card">
-  <div class="qual-query"><img src="{s['query']}"><div class="cell-label">Query mask<br>({qv} view, first frame)</div></div>
-  <div class="qual-video">{vid(s['video'], 'qual-vid', 'qual-' + direction, lazy=True)}<div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
-</div>''')
-    return ''.join(cards)
+    items = [q for q in qual if q['direction'] == direction]
+    data = json.dumps([{'q': it['query'], 'v': it['video'], 'n': it['n_frames']} for it in items])
+    thumbs = ''.join(f'<button class="thumb{" is-current" if k == 0 else ""}" data-k="{k}" title="{it["object"]}"><img src="{it["query"]}" loading="lazy"><span class="thumb-n">{k+1}</span></button>' for k, it in enumerate(items))
+    return f"""<div class="carousel" id="car-{direction}" data-items='{data}'>
+  <div class="car-main">
+    <div class="car-query"><img class="car-qimg" src="{items[0]['query']}"><div class="cell-label">Query mask<br>({qv} view, first frame)</div></div>
+    <div class="car-video"><video class="car-vid" src="{items[0]['video']}" muted autoplay playsinline preload="auto"></video>
+      <div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
+  </div>
+  <div class="car-ctrl">
+    <button class="button is-small car-prev"><i class="fas fa-chevron-left"></i></button>
+    <span class="car-pos">1 / {len(items)}</span>
+    <button class="button is-small car-next"><i class="fas fa-chevron-right"></i></button>
+    <label class="car-auto"><input type="checkbox" class="car-autoplay" checked> auto-advance</label>
+  </div>
+  <div class="thumbs">{thumbs}</div>
+</div>"""
 
 def card(icon, title, bullets, extra=''):
     return f"""<div class="mcard"><div class="mcard-head"><span class="mcard-icon"><i class="fas {icon}"></i></span><span class="mcard-title">{title}</span></div>
@@ -167,17 +177,23 @@ html = f'''<!DOCTYPE html>
   .dsnote {{ font-size:1rem; color:#444; margin-bottom:.5rem; }}
   .step-n {{ flex:0 0 26px; height:26px; border-radius:50%; background:#d3f9d8; color:#2b8a3e; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }}
   /* ---- qualitative ---- */
-  .qual-grid {{ display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; }}
-  .qual-card {{ border:1px solid var(--line); border-radius:12px; padding:.7rem; background:#fff; display:grid; grid-template-columns:140px 1fr; gap:.7rem; align-items:start; }}
-  .qual-query img {{ width:100%; border-radius:8px; display:block; background:#000; }}
-  .qual-video video {{ width:100%; border-radius:8px; display:block; background:#000; }}
+  .carousel {{ border:1px solid var(--line); border-radius:12px; padding:.9rem; background:#fff; }}
+  .car-main {{ display:grid; grid-template-columns:1fr 2.8fr; gap:.9rem; align-items:start; }}
+  .car-query img, .car-video video {{ width:100%; border-radius:8px; display:block; background:#000; }}
+  .car-ctrl {{ display:flex; align-items:center; justify-content:center; gap:.7rem; margin:.7rem 0 .5rem; font-size:.95rem; }}
+  .car-auto {{ font-size:.85rem; color:var(--muted); margin-left:.6rem; }}
+  .thumbs {{ display:flex; gap:.4rem; overflow-x:auto; padding:.3rem .1rem; scrollbar-width:thin; }}
+  .thumb {{ flex:0 0 auto; position:relative; width:96px; padding:0; border:2px solid transparent; border-radius:6px; background:#000; cursor:pointer; opacity:.55; }}
+  .thumb img {{ width:100%; aspect-ratio:16/10; object-fit:cover; display:block; border-radius:4px; }}
+  .thumb-n {{ position:absolute; left:3px; top:2px; font-size:.65rem; color:#fff; background:rgba(0,0,0,.55); border-radius:3px; padding:0 4px; }}
+  .thumb:hover {{ opacity:.9; }} .thumb.is-current {{ opacity:1; border-color:var(--green); }}
   .tabs.is-toggle a {{ font-weight:600; }}
   .speed-note {{ font-size:.85rem; color:var(--muted); }}
   .ctrl {{ margin:.5rem 0; }}
   .ctrl button {{ margin-right:.4rem; }}
   pre.bib {{ background:#f5f5f5; border-radius:8px; padding:1rem; font-size:.9rem; white-space:pre-wrap; }}
   footer {{ color:var(--muted); font-size:.9rem; }}
-  @media (max-width: 900px) {{ .mcards {{ grid-template-columns:1fr; }} .mgrid {{ grid-template-columns:repeat(3, 1fr); }} .mblock {{ grid-column:span 3; }} .qual-grid {{ grid-template-columns:1fr; }} .qual-card {{ grid-template-columns:1fr; }} }}
+  @media (max-width: 900px) {{ .mcards {{ grid-template-columns:1fr; }} .mgrid {{ grid-template-columns:repeat(3, 1fr); }} .mblock {{ grid-column:span 3; }} .car-main {{ grid-template-columns:1fr; }} }}
 </style>
 </head>
 <body>
@@ -249,8 +265,8 @@ html = f'''<!DOCTYPE html>
         <li data-tab="ego2exo"><a>Ego &rarr; Exo &nbsp;<small>(query in ego view)</small></a></li>
       </ul>
     </div>
-    <div class="qual-grid" id="qual-exo2ego">{qual_cards('exo2ego')}</div>
-    <div class="qual-grid" id="qual-ego2exo" style="display:none">{qual_cards('ego2exo')}</div>
+    <div id="qual-exo2ego">{qual_carousel('exo2ego')}</div>
+    <div id="qual-ego2exo" style="display:none">{qual_carousel('ego2exo')}</div>
   </div>
 </section>
 
@@ -302,10 +318,30 @@ const io = new IntersectionObserver(entries => entries.forEach(e => {{
   }} else v.pause();
 }}), {{rootMargin: '300px 0px', threshold: 0.01}});
 document.querySelectorAll('video.lazy').forEach(v => io.observe(v));
+// ---- qualitative carousels: one video plays at a time ----
+document.querySelectorAll('.carousel').forEach(car => {{
+  const items = JSON.parse(car.dataset.items); let k = 0;
+  const vid = car.querySelector('.car-vid'), qimg = car.querySelector('.car-qimg'), pos = car.querySelector('.car-pos');
+  const thumbs = Array.from(car.querySelectorAll('.thumb')); const auto = car.querySelector('.car-autoplay');
+  function show(n) {{
+    k = (n + items.length) % items.length; qimg.src = items[k].q; vid.src = items[k].v; vid.load(); vid.play().catch(()=>{{}});
+    pos.textContent = (k + 1) + ' / ' + items.length;
+    thumbs.forEach((t, i) => t.classList.toggle('is-current', i === k));
+    thumbs[k].scrollIntoView({{block: 'nearest', inline: 'center', behavior: 'smooth'}});
+    const nxt = new Image(); nxt.src = items[(k + 1) % items.length].q;  // prefetch next query image
+  }}
+  car.querySelector('.car-prev').addEventListener('click', () => show(k - 1));
+  car.querySelector('.car-next').addEventListener('click', () => show(k + 1));
+  thumbs.forEach(t => t.addEventListener('click', () => show(+t.dataset.k)));
+  vid.addEventListener('ended', () => {{ if (auto.checked) show(k + 1); else {{ vid.currentTime = 0; vid.play().catch(()=>{{}}); }} }});
+  car.showIndex = show; car.pauseVid = () => vid.pause(); car.resumeVid = () => vid.play().catch(()=>{{}});
+}});
 document.querySelectorAll('#qual-tabs li').forEach(li => li.addEventListener('click', () => {{
   document.querySelectorAll('#qual-tabs li').forEach(x => x.classList.remove('is-active')); li.classList.add('is-active');
-  ['ego2exo','exo2ego'].forEach(t => document.getElementById('qual-' + t).style.display = (t === li.dataset.tab ? 'grid' : 'none'));
-  syncRestart('qual-' + li.dataset.tab);
+  ['ego2exo','exo2ego'].forEach(t => {{
+    const on = t === li.dataset.tab; document.getElementById('qual-' + t).style.display = on ? 'block' : 'none';
+    const car = document.getElementById('car-' + t); if (on) car.resumeVid(); else car.pauseVid();
+  }});
 }}));
 </script>
 </body>

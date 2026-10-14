@@ -51,7 +51,7 @@ def repack_vggt(src, dst, n_max=None):
         sel_txt = f'VGGT selection: {sel}' if sel else 'VGGT selection: no mask'
         def cand(panel, has, txt, col):
             return band(panel, txt, col) if has else band(note(panel.copy(), 'no mask'), txt, (190, 190, 190))
-        panels = [band(exo, 'Exo view (query)'), cand(ego[0], fwd_has, 'Forward candidate', (120, 120, 255)), cand(ego[1], bwd_has, 'Backward candidate', (255, 180, 120)),
+        panels = [band(exo, 'Exo view (query)'), band(ego[0], 'Forward candidate', (120, 120, 255)), band(ego[1], 'Backward candidate', (255, 180, 120)),
                   band(ego[2], sel_txt, (120, 255, 120)) if sel else band(note(ego[2].copy(), 'no mask'), sel_txt, (190, 190, 190))]
         row = np.full((250, sum(p.shape[1] for p in panels) + GAP * 3, 3), 255, np.uint8); x = 0
         for p in panels: row[:, x:x + p.shape[1]] = p; x += p.shape[1] + GAP
