@@ -62,7 +62,8 @@
   /* ---- qualitative ---- */
   .carousel { border:1px solid var(--line); border-radius:12px; padding:.9rem; background:#fff; }
   .car-main { display:grid; grid-template-columns:1fr 2.8fr; gap:.9rem; align-items:start; }
-  .car-query img, .car-video video { width:100%; border-radius:8px; display:block; background:#000; }
+  .car-query img { width:100%; aspect-ratio:796/448; object-fit:cover; border-radius:8px; display:block; background:#000; }
+  .car-video video { width:100%; aspect-ratio:1248/448; border-radius:8px; display:block; background:#000; }
   .car-ctrl { display:flex; align-items:center; justify-content:center; gap:.7rem; margin:.7rem 0 .5rem; font-size:.95rem; }
   .car-auto { font-size:.85rem; color:var(--muted); margin-left:.6rem; }
   .thumbs { display:flex; gap:.4rem; overflow-x:auto; padding:.3rem .1rem; scrollbar-width:thin; }
