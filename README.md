@@ -1,10 +1,10 @@
-<h2 align="center"><strong>Repurposing Video Diffusion Transformers for<br>Cross-View Temporal Object Correspondence</strong></h2>
+<h2 align="center"><strong>Repurposing Video Diffusion Transformers for Cross-View Temporal Object Correspondence</strong></h2>
 
 <p align="center">
 <a href="https://jinsy515.github.io/my-page/" target="_blank">Siyoon Jin</a><sup>*</sup>,
 <a href="https://dhyun22.github.io/" target="_blank">Dahyun Chung</a><sup>*</sup>,
 <a href="https://hg010303.github.io/" target="_blank">Honggyu An</a>,
-<a href="https://sangbeomlim.github.io/" target="_blank">Sangbeom Lim</a>,
+<a href="https://sangbeomlim.github.io/" target="_blank">Sangbeom Lim</a>,<br>
 <a href="https://wjnam6525.github.io/" target="_blank">Wonjin Nam</a>,
 <a href="https://crepejung00.github.io/" target="_blank">Jaewoo Jung</a>,
 <a href="https://wjun0830.github.io/" target="_blank">WonJun Moon</a>,
@@ -13,17 +13,16 @@
 
 <p align="center">
 KAIST AI<br>
-<sup>*</sup> Equal contribution<br>
-<span style="font-size: 1.5em;"><strong>NeurIPS 2026</strong></span>
+<sup>*</sup> Equal contribution
 </p>
+
+<h2 align="center">NeurIPS 2026</h2>
 
 <p align="center">
   <a href="https://cvlab-kaist.github.io/XTrack/">
   <img src="https://img.shields.io/badge/Project-Page-%23df5b46?style=flat&logo=Google%20chrome&logoColor=%23df5b46"></a>
   <a href="#">
   <img src="https://img.shields.io/badge/arXiv-coming_soon-A42C25?style=flat&logo=arXiv&logoColor=A42C25"></a>
-  <a href="https://huggingface.co/datasets/clwm515/XTrack">
-  <img src="https://img.shields.io/badge/Results-Hugging_Face-FFD21E?style=flat&logo=huggingface&logoColor=FFD21E"></a>
 </p>
 
 <p align="center">
@@ -74,7 +73,6 @@ Ego-Exo4D provides 30 FPS video but object masks only at 1 FPS. Our curation pip
 
 - [ ] arXiv preprint
 - [ ] Inference code and pretrained checkpoints
-- [ ] Pseudo-label curation pipeline
 - [ ] Training code
 
 ## 📄 Citation
@@ -87,9 +85,5 @@ Ego-Exo4D provides 30 FPS video but object masks only at 1 FPS. Our curation pip
   year      = {2026}
 }
 ```
-
-## 🙏 Acknowledgements
-
-Videos and annotations are from [Ego-Exo4D](https://ego-exo4d-data.org/). Baselines in the comparisons: [ObjectRelator](https://github.com/lovelyqian/ObjectRelator), [O-MaMa](https://github.com/mariamugartem/O-MaMa), LM-EEC, and V2-SAM. The project page template is adapted from [Nerfies](https://nerfies.github.io).
 
 <sub>Maintainer notes for regenerating the project page are in [`scripts/README.md`](scripts/README.md).</sub>
