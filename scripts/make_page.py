@@ -26,7 +26,8 @@ ABSTRACT = ('Cross-view object correspondence identifies the same object across 
 
 METHODS = [('objectrelator', 'ObjectRelator'), ('omama', 'O-MaMa'), ('lmeec', 'LM-EEC'), ('v2sam', 'V2-SAM')]
 
-def vid(src, cls='', group='motiv'):
+def vid(src, cls='', group='motiv', lazy=False):
+    if lazy: return f'<video class="sync lazy {cls}" data-group="{group}" data-src="{src}" muted playsinline loop preload="none"></video>'
     return f'<video class="sync {cls}" data-group="{group}" src="{src}" muted playsinline loop preload="metadata"></video>'
 
 def cell(label, inner, cls=''):
@@ -57,7 +58,7 @@ def qual_cards(direction):
     for s in [q for q in qual if q['direction'] == direction]:
         cards.append(f'''<div class="qual-card">
   <div class="qual-query"><img src="{s['query']}"><div class="cell-label">Query mask<br>({qv} view, first frame)</div></div>
-  <div class="qual-video">{vid(s['video'], 'qual-vid', 'qual-' + direction)}<div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
+  <div class="qual-video">{vid(s['video'], 'qual-vid', 'qual-' + direction, lazy=True)}<div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div>''')
     return ''.join(cards)
 
@@ -94,14 +95,14 @@ The resulting dense, verified labels are what XTrack is fine-tuned on at the vid
 
 <h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">Cross-view geometric verification</h4>
 <p class="dsnote">Exo query (left), the forward (red) and backward (blue) ego candidates, and the candidate selected by VGGT similarity to the exo view (right).</p>
-<div class="dsrow"><video class="sync" data-group="ds1" src="static/dataset/vggt_basketball_packed.mp4" muted playsinline loop preload="metadata"></video></div>
-<div class="dsrow"><video class="sync" data-group="ds2" src="static/dataset/vggt_bike_packed.mp4" muted playsinline loop preload="metadata"></video></div>
+<div class="dsrow"><video class="sync lazy" data-group="ds1" data-src="static/dataset/vggt_basketball_packed.mp4" muted playsinline loop preload="none"></video></div>
+<div class="dsrow"><video class="sync lazy" data-group="ds2" data-src="static/dataset/vggt_bike_packed.mp4" muted playsinline loop preload="none"></video></div>
 
 <h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">Within-view semantic verification</h4>
 <p class="dsnote">Geometric verification only <i>selects</i> between the forward and backward candidates, so it cannot recover a chunk where both candidates are wrong.
 Semantic verification complements it: the selected candidate is compared with the first-frame ego anchor, and chunks with low similarity are discarded.</p>
-<div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/vggt_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Cross-view geometric verification &mdash; both candidates miss the ball, so selecting one of them is not enough.</div></div>
-<div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/dino_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Within-view semantic verification &mdash; compared with the first-frame ego anchor (left, green), the candidates have low DINOv3 similarity and the chunk is discarded.</div></div>
+<div class="dsrow"><video class="sync lazy" data-group="ds3" data-src="static/dataset/vggt_soccer_packed.mp4" muted playsinline loop preload="none"></video><div class="cell-label">Cross-view geometric verification &mdash; both candidates miss the ball, so selecting one of them is not enough.</div></div>
+<div class="dsrow"><video class="sync lazy" data-group="ds3" data-src="static/dataset/dino_soccer_packed.mp4" muted playsinline loop preload="none"></video><div class="cell-label">Within-view semantic verification &mdash; compared with the first-frame ego anchor (left, green), the candidates have low DINOv3 similarity and the chunk is discarded.</div></div>
 """
 
 html = f'''<!DOCTYPE html>
@@ -289,12 +290,18 @@ function startGroup(g) {{
   Promise.all(vs.map(v => new Promise(r => {{ if (v.readyState >= 1) r(); else v.addEventListener('loadedmetadata', r, {{once:true}}); }})))
     .then(() => syncRestart(g));
 }}
-const groups = new Set(Array.from(document.querySelectorAll('video.sync')).map(v => v.dataset.group));
-groups.forEach(startGroup);
+startGroup('motiv');
+const started = new Set();
 const io = new IntersectionObserver(entries => entries.forEach(e => {{
-  const v = e.target; if (e.isIntersecting) v.play().catch(()=>{{}}); else v.pause();
-}}), {{threshold: 0.1}});
-document.querySelectorAll('video.qual-vid').forEach(v => io.observe(v));
+  const v = e.target;
+  if (e.isIntersecting) {{
+    if (v.dataset.src && !v.getAttribute('src')) {{ v.src = v.dataset.src; v.load(); }}
+    const g = v.dataset.group;
+    if (!started.has(g) && groupVideos(g).every(x => !x.dataset.src || x.getAttribute('src'))) {{ started.add(g); startGroup(g); }}
+    v.play().catch(()=>{{}});
+  }} else v.pause();
+}}), {{rootMargin: '300px 0px', threshold: 0.01}});
+document.querySelectorAll('video.lazy').forEach(v => io.observe(v));
 document.querySelectorAll('#qual-tabs li').forEach(li => li.addEventListener('click', () => {{
   document.querySelectorAll('#qual-tabs li').forEach(x => x.classList.remove('is-active')); li.classList.add('is-active');
   ['ego2exo','exo2ego'].forEach(t => document.getElementById('qual-' + t).style.display = (t === li.dataset.tab ? 'grid' : 'none'));

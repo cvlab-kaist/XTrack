@@ -52,13 +52,21 @@ def to_green(panel):
     out[m, 1], out[m, 2] = out[m, 2], out[m, 1]  # swap R<->G
     return out
 
+def sat(panel): return cv2.cvtColor(panel, cv2.COLOR_BGR2HSV)[..., 1].mean()
+def greyed(panel):
+    g = cv2.cvtColor(cv2.cvtColor(panel, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR); g = (g * 0.45).astype(np.uint8)
+    H, W = g.shape[:2]; cv2.putText(g, 'DISCARDED', (W // 2 - 78, H // 2 + 8), cv2.FONT_HERSHEY_SIMPLEX, 0.85, (60, 60, 230), 2, cv2.LINE_AA); return g
+
 def repack_dino(src, dst, n_max=None):
     fr = read(src)[:n_max]; out = []
     anchor = band(to_green(fr[0][:-20, 0:300]), 'Ego anchor (first-frame GT)', (120, 255, 120))
     for im in fr:
         im = im[:-20]  # drop baked frame counter
         p = [im[:, 300 * k:300 * (k + 1)] for k in range(3)]
-        panels = [anchor, band(p[0], 'Forward candidate', (120, 120, 255)), band(p[1], 'Backward candidate', (255, 180, 120)), band(p[2], 'DINOv3 check vs. anchor', (120, 255, 120))]
+        # the source renders discarded frames washed-out; detect by saturation drop vs. the forward panel and grey them out strongly
+        discard = sat(p[2][40:]) < 0.6 * sat(p[0][40:])
+        chk = band(greyed(p[2]), 'DINOv3 check: discarded', (120, 120, 255)) if discard else band(p[2], 'DINOv3 check vs. anchor', (120, 255, 120))
+        panels = [anchor, band(p[0], 'Forward candidate', (120, 120, 255)), band(p[1], 'Backward candidate', (255, 180, 120)), chk]
         row = np.full((im.shape[0], 1200 + GAP * 3, 3), 255, np.uint8); x = 0
         for q in panels: row[:, x:x + 300] = q; x += 300 + GAP
         out.append(row)
