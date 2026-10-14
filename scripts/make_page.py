@@ -193,7 +193,7 @@ html = f'''<!DOCTYPE html>
       <div class="venue">{VENUE}</div>
       <div class="link-block" style="margin-top:1rem">
         <a class="button is-dark is-rounded" href="#"><span class="icon"><i class="fas fa-scroll"></i></span><span>arXiv</span></a>
-        <a class="button is-dark is-rounded" href="#"><span class="icon"><i class="fab fa-github"></i></span><span>Code</span></a>
+        <a class="button is-dark is-rounded" href="https://github.com/cvlab-kaist/XTrack" target="_blank" rel="noopener"><span class="icon"><i class="fab fa-github"></i></span><span>Code</span></a>
       </div>
     </div>
   </div>
