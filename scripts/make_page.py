@@ -104,6 +104,18 @@ Chunks where the two disagree are flagged and refined; the curated labels (right
   <div class="column"><div class="step"><span class="step-n">b</span><div><b>Cross-view geometric verification</b><br>VGGT similarity between each ego candidate and the exo pseudo-GT picks the consistent one.</div></div></div>
   <div class="column"><div class="step"><span class="step-n">c</span><div><b>Within-view semantic verification</b><br>DINOv3 similarity to the ego anchor removes the remaining wrong masks.</div></div></div>
 </div>
+
+<h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">(b) Cross-view geometric verification with VGGT</h4>
+<p class="dsnote">Exo query (left), the two ego candidates from forward (red) and backward (blue) propagation, and the candidate selected by VGGT similarity to the exo view (right).</p>
+<div class="dsrow"><video class="sync" data-group="ds1" src="static/dataset/vggt_basketball.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Basketball &mdash; forward and backward disagree; VGGT selects the candidate consistent with the exo view.</div></div>
+<div class="dsrow"><video class="sync" data-group="ds2" src="static/dataset/vggt_bike.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Bike repair &mdash; the wheel hub is small in the ego view, but the exo reference still disambiguates the candidates.</div></div>
+
+<h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">(c) When geometric verification fails, semantic verification discards the chunk</h4>
+<p class="dsnote">Small, fast-moving objects can fool the geometric check. Here VGGT selects a candidate that is not the ball; its DINOv3 similarity to the ego anchor is low, so the chunk is discarded instead of entering the training set.</p>
+<div class="columns is-vcentered">
+  <div class="column is-8"><div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/vggt_soccer.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">VGGT picks the wrong candidate (soccer ball).</div></div></div>
+  <div class="column is-4"><div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/dino_soccer.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Within-view DINOv3 check: low similarity &rarr; discarded.</div></div></div>
+</div>
 """
 
 html = f'''<!DOCTYPE html>
@@ -120,7 +132,7 @@ html = f'''<!DOCTYPE html>
   :root {{ --green:#1fb84a; --red:#e03131; --ink:#222; --muted:#6b6b6b; --line:#e5e5e5; }}
   body {{ font-family:'Google Sans','Noto Sans',sans-serif; color:var(--ink); }}
   .hero .title {{ font-size:2.1rem; line-height:1.25; }}
-  .venue {{ display:inline-block; font-weight:700; font-size:1.6rem; letter-spacing:.03em; color:#3b5bdb; border:2px solid #3b5bdb; border-radius:999px; padding:.2rem 1.4rem; margin:.9rem 0 .2rem; }}
+  .venue {{ font-weight:700; font-size:1.6rem; color:var(--ink); margin:.8rem 0 .2rem; }}
   .authors {{ font-size:1.15rem; line-height:1.9; }}
   .authors .arow {{ display:block; }}
   .authors a {{ color:#3273dc; margin:0 .55rem; }}
@@ -158,6 +170,9 @@ html = f'''<!DOCTYPE html>
   .mcard-list {{ list-style:disc; padding-left:1.1rem; font-size:.9rem; color:#333; }}
   .mcard-list li {{ margin-bottom:.3rem; }}
   .step {{ display:flex; gap:.7rem; font-size:.92rem; }}
+  .dsrow video {{ width:100%; display:block; border-radius:8px; background:#000; }}
+  .dsrow {{ margin-bottom:.6rem; }}
+  .dsnote {{ font-size:.92rem; color:#444; margin-bottom:.5rem; }}
   .step-n {{ flex:0 0 26px; height:26px; border-radius:50%; background:#d3f9d8; color:#2b8a3e; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }}
   /* ---- qualitative ---- */
   .qual-grid {{ display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; }}
