@@ -39,7 +39,7 @@ motiv_html = f"""
   {cell('Query mask &middot; Exo view, first frame', '<img src="static/motivation/query.jpg">', 'wide')}
   {cell('Ground truth', vid('static/motivation/gt.mp4'))}
   {cell('<b>XTrack (Ours)</b>', vid('static/motivation/ours.mp4'), 'ours')}
-  {mblock('Exo2Ego &middot; Ego-Exo4D', ['Query: <b>exo</b> view &rarr; prediction: <b>ego</b> view', '<span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines', '2&times; speed'], 'info')}
+  {mblock('Exo2Ego &middot; Ego-Exo4D dataset', ['Query: <b>exo</b> &rarr; prediction: <b>ego</b>', '<span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines', '2&times; speed'], 'info')}
 
   {mblock('(a) Track-then-Match', ['<span class="x">&#10007;</span> temporally inconsistent matching', '<span class="x">&#10007;</span> false positives when the target is absent'], 'bad')}
   {''.join(cell(name, vid(f'static/motivation/{m}_sam2qt.mp4')) for m, name in METHODS)}
@@ -65,31 +65,31 @@ def card(icon, title, bullets, extra=''):
 
 METHOD_SECTIONS = f"""
 <img class="figure-img" src="static/images/fig2_architecture.png" alt="architecture">
-<div class="caption" style="margin-bottom:1.2rem">Overall architecture. Ego and exo videos enter a pretrained video DiT as a <b>diptych</b>; the model transports RGB latents to mask latents for both views at once.</div>
+<div class="caption" style="margin-bottom:1.2rem">Overall architecture. The ego and exo videos are placed side by side in a single frame and fed to a pretrained video DiT, which transports RGB latents to mask latents for both views at once.</div>
 
 <div class="mcards">
   {card('fa-arrow-right-arrow-left', 'RGB-to-mask flow', ['Flow matching from the RGB latent to the mask latent, keeping the video DiT priors.'])}
-  {card('fa-table-columns', 'Unified ego-exo tokens', ['Both views in one diptych; cross-view matching and tracking in the same attention.'])}
+  {card('fa-table-columns', 'Unified ego-exo tokens', ['Ego and exo frames are placed side by side in one input, so cross-view matching and within-view tracking happen in the same attention.'])}
   {card('fa-bullseye', 'Focal attention alignment', ['Cross-view attention is supervised to land on the query object.'])}
-  {card('fa-code-compare', 'Hard negative conditioning', ['The same ego-exo videos are run twice: once with the correct query mask and once with the mask of another object. A margin loss on the two target-side predictions forces them apart, so the output follows the query identity.'])}
+  {card('fa-code-compare', 'Hard negative conditioning', ['Run the same videos with the correct query mask and with another object\'s mask; a margin loss keeps the two predictions apart.'])}
   {card('fa-magnifying-glass-plus', 'Local context crop', ['Object crop tokens with original RoPE positions for small objects.'])}
   {card('fa-layer-group', 'Two-stage training', ['Image-level cycle-consistency pretraining, then video fine-tuning on curated pseudo-labels.'])}
 </div>
 
-<h3 class="title is-5" style="margin-top:2rem">Pseudo-label curation: 1 FPS annotations &rarr; dense, verified labels</h3>
+<h3 class="title is-5" style="margin-top:2rem">Pseudo-label curation: 1 FPS annotations &rarr; 30 FPS verified labels</h3>
 <img class="figure-img" src="static/images/fig4_pseudolabel.png" alt="pseudo-label pipeline" style="max-width:900px;margin:0 auto .8rem">
 <div class="columns" style="margin-top:.2rem">
-  <div class="column"><div class="step"><span class="step-n">a</span><div><b>Bidirectional propagation</b><br>Forward and backward SAM2 between anchors; low agreement marks unreliable chunks.</div></div></div>
+  <div class="column"><div class="step"><span class="step-n">a</span><div><b>Bidirectional propagation</b><br>Forward and backward SAM2 between anchors; chunks where the two propagations disagree are selected for verification.</div></div></div>
   <div class="column"><div class="step"><span class="step-n">b</span><div><b>Cross-view geometric verification</b><br>VGGT similarity to the exo view selects one of the two candidates.</div></div></div>
   <div class="column"><div class="step"><span class="step-n">c</span><div><b>Within-view semantic verification</b><br>DINOv3 similarity to the first-frame ego anchor discards chunks that are still wrong.</div></div></div>
 </div>
 
-<h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">(b) Cross-view geometric verification</h4>
+<h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">Cross-view geometric verification</h4>
 <p class="dsnote">Exo query (left), the forward (red) and backward (blue) ego candidates, and the candidate selected by VGGT similarity to the exo view (right).</p>
 <div class="dsrow"><video class="sync" data-group="ds1" src="static/dataset/vggt_basketball_packed.mp4" muted playsinline loop preload="metadata"></video></div>
 <div class="dsrow"><video class="sync" data-group="ds2" src="static/dataset/vggt_bike_packed.mp4" muted playsinline loop preload="metadata"></video></div>
 
-<h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">(b) + (c) Complementary verification on one chunk</h4>
+<h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">Within-view semantic verification</h4>
 <p class="dsnote">Geometric verification only <i>selects</i> between the forward and backward candidates, so it cannot recover a chunk where both candidates are wrong.
 Semantic verification complements it: the selected candidate is compared with the first-frame ego anchor, and chunks with low similarity are discarded.</p>
 <div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/vggt_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label"><b>Cross-view geometric verification</b> &mdash; both candidates miss the ball, so selecting one of them is not enough.</div></div>
@@ -127,7 +127,9 @@ html = f'''<!DOCTYPE html>
   .fig1 {{ max-width:960px; margin:0 auto; }}
   .mgrid {{ display:grid; grid-template-columns:repeat(6, 1fr); gap:.45rem; align-items:start; }}
   .mblock {{ grid-column:span 2; border-radius:8px; padding:.55rem .7rem; font-size:.82rem; line-height:1.35; }}
-  .mblock.info {{ background:#eef1f5; }}
+  .mblock.info {{ background:#eef1f5; font-size:1.2rem; line-height:1.45; }}
+  .mblock.info .mtitle {{ font-size:1.3rem; }}
+  .mblock.info .sw {{ width:16px; height:16px; }}
   .mblock.bad {{ background:none; padding-left:.2rem; }}
   .mblock.bad .mtitle {{ color:var(--ink); }}
   .mblock.bad .mline {{ color:var(--ink); }}
