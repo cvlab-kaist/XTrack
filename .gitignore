@@ -2,3 +2,4 @@ __pycache__/
 .tmp_*/
 *.log
 .DS_Store
+_cherry/
