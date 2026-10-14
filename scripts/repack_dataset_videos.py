@@ -45,19 +45,29 @@ def repack_vggt(src, dst, n_max=None):
         out.append(row)
     encode(out, dst, 15)
 
+def to_green(panel):
+    """Recolour the red (forward) overlay of a panel to green: used to show the GT anchor the forward pass starts from."""
+    out = panel.copy(); b, g, r = out[..., 0].astype(int), out[..., 1].astype(int), out[..., 2].astype(int)
+    m = (r > 120) & (r > g + 50) & (r > b + 50)
+    out[m, 1], out[m, 2] = out[m, 2], out[m, 1]  # swap R<->G
+    return out
+
 def repack_dino(src, dst, n_max=None):
     fr = read(src)[:n_max]; out = []
+    anchor = band(to_green(fr[0][:-20, 0:300]), 'Ego anchor (first-frame GT)', (120, 255, 120))
     for im in fr:
         im = im[:-20]  # drop baked frame counter
         p = [im[:, 300 * k:300 * (k + 1)] for k in range(3)]
-        panels = [band(p[0], 'Forward candidate', (120, 120, 255)), band(p[1], 'Backward candidate', (255, 180, 120)), band(p[2], 'DINOv3 check vs. ego anchor', (120, 255, 120))]
-        row = np.full((im.shape[0], 900 + GAP * 2, 3), 255, np.uint8); x = 0
+        panels = [anchor, band(p[0], 'Forward candidate', (120, 120, 255)), band(p[1], 'Backward candidate', (255, 180, 120)), band(p[2], 'DINOv3 check vs. anchor', (120, 255, 120))]
+        row = np.full((im.shape[0], 1200 + GAP * 3, 3), 255, np.uint8); x = 0
         for q in panels: row[:, x:x + 300] = q; x += 300 + GAP
         out.append(row)
     encode(out, dst, 15)
 
 if __name__ == '__main__':
-    repack_vggt(D / 'vggt_basketball.mp4', D / 'vggt_basketball_packed.mp4')
-    repack_vggt(D / 'vggt_bike.mp4', D / 'vggt_bike_packed.mp4')
-    repack_vggt(D / 'vggt_soccer.mp4', D / 'vggt_soccer_packed.mp4', 110)
+    import sys
+    if 'dino' not in sys.argv[1:]:
+        repack_vggt(D / 'vggt_basketball.mp4', D / 'vggt_basketball_packed.mp4')
+        repack_vggt(D / 'vggt_bike.mp4', D / 'vggt_bike_packed.mp4')
+        repack_vggt(D / 'vggt_soccer.mp4', D / 'vggt_soccer_packed.mp4', 110)
     repack_dino(D / 'dino_soccer.mp4', D / 'dino_soccer_packed.mp4', 110)

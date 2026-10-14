@@ -92,10 +92,8 @@ METHOD_SECTIONS = f"""
 
 <h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">(c) When geometric verification fails, semantic verification discards the chunk</h4>
 <p class="dsnote">Small, fast-moving objects can fool the geometric check. Here VGGT selects a candidate that is not the ball; its DINOv3 similarity to the ego anchor is low, so the chunk is discarded instead of entering the training set.</p>
-<div class="columns is-vcentered">
-  <div class="column is-8"><div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/vggt_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">VGGT picks the wrong candidate (soccer ball).</div></div></div>
-  <div class="column is-4"><div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/dino_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Within-view DINOv3 check: low similarity &rarr; discarded.</div></div></div>
-</div>
+<div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/vggt_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Cross-view check: VGGT picks the wrong candidate (soccer ball).</div></div>
+<div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/dino_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Within-view check on the same chunk: the ego first-frame anchor (left, green) is the reference; DINOv3 similarity of the candidates to the anchor is low &rarr; chunk discarded.</div></div>
 """
 
 html = f'''<!DOCTYPE html>
