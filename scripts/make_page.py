@@ -76,7 +76,13 @@ METHOD_SECTIONS = f"""
   {card('fa-layer-group', 'Two-stage training', ['Image-level cycle-consistency pretraining, then video fine-tuning on curated pseudo-labels.'])}
 </div>
 
-<h3 class="title is-5" style="margin-top:2rem">Pseudo-label curation: 1 FPS annotations &rarr; 30 FPS verified labels</h3>
+"""
+
+DATASET_SECTION = f"""
+<h2 class="title is-4 section-title has-text-centered">Pseudo-Label Curation</h2>
+<p class="lead">Ego-Exo4D provides 30 FPS video but object masks only at 1 FPS, which is too sparse to train a video model, and plain SAM2 propagation is unreliable in the ego view.
+Our curation pipeline propagates the sparse annotations and verifies them across views and within each view, turning the 1 FPS annotations into 30 FPS pseudo-labels.
+The resulting dense, verified labels are what XTrack is fine-tuned on at the video level.</p>
 <img class="figure-img" src="static/images/fig4_pseudolabel.png" alt="pseudo-label pipeline" style="max-width:900px;margin:0 auto .8rem">
 <div class="columns" style="margin-top:.2rem">
   <div class="column"><div class="step"><span class="step-n">a</span><div><b>Bidirectional propagation</b><br>Forward and backward SAM2 between anchors; chunks where the two propagations disagree are selected for verification.</div></div></div>
@@ -113,7 +119,8 @@ html = f'''<!DOCTYPE html>
   .venue {{ font-weight:700; font-size:1.6rem; color:var(--ink); margin:.8rem 0 .2rem; }}
   .authors {{ font-size:1.15rem; line-height:1.9; }}
   .authors .arow {{ display:block; }}
-  .authors a {{ color:#3273dc; margin:0 .55rem; }}
+  .authors .author-block {{ margin:0 .55rem; white-space:nowrap; }}
+  .authors a {{ color:#3273dc; }}
   .affil {{ font-size:1.05rem; color:var(--muted); margin-top:.3rem; }}
   .eq {{ font-size:.85rem; color:var(--muted); }}
   .link-block .button {{ margin:.25rem; }}
@@ -177,16 +184,14 @@ html = f'''<!DOCTYPE html>
     <div class="container is-max-desktop has-text-centered">
       <h1 class="title publication-title">{TITLE}</h1>
       <div class="authors">
-        {''.join('<span class="arow">' + ''.join(f'<a href="#">{n}</a><sup>{s}</sup>' for n, s in row) + '</span>' for row in AUTHOR_ROWS)}
+        {''.join('<span class="arow">' + ''.join(f'<span class="author-block"><a href="#">{n}</a><sup>{s}</sup></span>' for n, s in row) + '</span>' for row in AUTHOR_ROWS)}
       </div>
       <div class="affil">KAIST AI</div>
       <div class="eq"><sup>*</sup>Equal contribution</div>
       <div class="venue">{VENUE}</div>
       <div class="link-block" style="margin-top:1rem">
-        <a class="button is-dark is-rounded" href="static/paper.pdf"><span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper</span></a>
         <a class="button is-dark is-rounded" href="#"><span class="icon"><i class="fas fa-scroll"></i></span><span>arXiv</span></a>
         <a class="button is-dark is-rounded" href="#"><span class="icon"><i class="fab fa-github"></i></span><span>Code</span></a>
-        <a class="button is-dark is-rounded" href="https://huggingface.co/datasets/clwm515/XTrack"><span class="icon"><i class="fas fa-database"></i></span><span>Results</span></a>
       </div>
     </div>
   </div>
@@ -201,7 +206,7 @@ html = f'''<!DOCTYPE html>
 
 <section class="section pt-0">
   <div class="container is-max-widescreen">
-    <h2 class="title is-4 section-title has-text-centered">Motivation: why joint view-time mask prediction?</h2>
+    <h2 class="title is-4 section-title has-text-centered">Motivation</h2>
     <p class="lead">Given a first-frame query mask in one view, the task is to recover temporally coherent masks of the same object in <b>both</b> views.
     Frame-level matchers must be paired with a tracker: <b>(a) Track-then-Match</b> propagates the query mask and matches it per frame,
     <b>(b) Match-then-Track</b> matches once and tracks each view independently. Both break under disappearance and viewpoint change.
@@ -221,6 +226,12 @@ html = f'''<!DOCTYPE html>
   <div class="container is-max-desktop">
     <h2 class="title is-4 section-title has-text-centered">Method</h2>
     {METHOD_SECTIONS}
+  </div>
+</section>
+
+<section class="section pt-0">
+  <div class="container is-max-desktop">
+    {DATASET_SECTION}
   </div>
 </section>
 
