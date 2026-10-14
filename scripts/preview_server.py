@@ -29,7 +29,7 @@ class RangeHandler(SimpleHTTPRequestHandler):
             dst.write(buf); left -= len(buf)
     def end_headers(self):
         self.send_header('Cache-Control', 'no-cache'); super().end_headers()
-    def log_message(self, *a): pass
+    def log_message(self, fmt, *a): sys.stderr.write("%s - %s\n" % (self.client_address[0], fmt % a)); sys.stderr.flush()
 
 if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8765

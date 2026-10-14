@@ -64,8 +64,14 @@ def query_image(uid, qcam, obj, fs, out, zoom_if_smaller_than=0.45):
     g = gt_for(uid, qcam, obj)
     cand = sorted(int(k) for k in g if int(k) >= fs)
     fq = fs if str(fs) in g else (cand[0] if cand else fs)
-    img = cv2.imread(str(GTANN/uid/qcam/'frames'/f'{fq}.jpg')); H, W = img.shape[:2]
+    img = cv2.imread(str(GTANN/uid/qcam/'frames'/f'{fq}.jpg'))
     m = fit(dec(g.get(str(fq))), img)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(str(out), compose_query(img, m, zoom_if_smaller_than), [cv2.IMWRITE_JPEG_QUALITY, 90])
+    return fq
+
+def compose_query(img, m, zoom_if_smaller_than=0.45):
+    H, W = img.shape[:2]
     main = paint(img, m, GREEN, alpha=0.45, th=3)
     if m is not None and m.any():
         ys, xs = np.where(m); bw, bh = xs.max() - xs.min() + 1, ys.max() - ys.min() + 1
@@ -85,9 +91,43 @@ def query_image(uid, qcam, obj, fs, out, zoom_if_smaller_than=0.45):
             cv2.putText(zoom, 'zoom', (W - 62, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 3, cv2.LINE_AA)
             cv2.putText(zoom, 'zoom', (W - 62, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
             main = zoom
-    out.parent.mkdir(parents=True, exist_ok=True)
-    cv2.imwrite(str(out), main, [cv2.IMWRITE_JPEG_QUALITY, 90])
-    return fq
+    return main
+
+QUAL_SHORT = {'set': 'val600_cherry_short_obj_p1_top30', 'exo2ego': [
+    'rank_02_JF0.9908_b60db7b1_Instruction_manual_0_c36-41', 'rank_06_JF0.9859_517207e4_stainless_steel_tray_0_c0-5',
+    'rank_07_JF0.9856_b50aba6e_chopping_board_0_c3-8', 'rank_10_JF0.9803_4356d71a_plastic_bowl_0_c0-5',
+    'rank_14_JF0.9753_b511dfed_covid_19_test_package_0_c8-13', 'rank_15_JF0.9748_2d042a82_egg_bowl_0_c9-14',
+    'rank_19_JF0.9653_af96da5b_cooked_egg_and_tomato_0_c40-45', 'rank_21_JF0.9561_fac6316e_White_chopping_board_0_c38-43',
+    'rank_22_JF0.9554_2041eb29_White_flat_plate_0_c25-30', 'rank_23_JF0.9528_4356d71a_pancake_pan_0_c37-42',
+    'rank_25_JF0.9480_09e9fcd9_fry_pan_0_c31-36', 'rank_28_JF0.9431_ede7b9c1_sterile_swab_package_1_c24-29',
+    'rank_29_JF0.9380_6101e4e5_sugar_container_0_c9-14'], 'ego2exo': [
+    'rank_04_JF0.9879_e5bfb696_Egg_Crate_0_c14-19', 'rank_05_JF0.9820_2ca53d8d_chopping_board_0_c31-36',
+    'rank_08_JF0.9747_2041eb29_White_flat_plate_0_c0-5', 'rank_11_JF0.9731_ede7b9c1_sterile_swab_package_1_c4-9',
+    'rank_13_JF0.9711_cd3aff9e_Pan_0_c26-31', 'rank_15_JF0.9634_2d042a82_egg_bowl_0_c40-45',
+    'rank_16_JF0.9616_6fbe4821_bicycle_wheel_0_c30-35', 'rank_19_JF0.9574_bbfcc023_milk_gallon_0_c0-5',
+    'rank_20_JF0.9538_2f53a0ce_CPR_dummy_c19-24', 'rank_23_JF0.9443_622995a4_Grind_Pepper_container_0_c24-29',
+    'rank_26_JF0.9402_6101e4e5_hand_towel_0_c22-27', 'rank_29_JF0.9348_4356d71a_pancake_pan_0_c19-24',
+    'rank_30_JF0.9347_6ded8a71_Instruction_sheet_0_c31-36']}
+
+def build_qual_short():
+    """Short-window samples straight from the HF videos: query = first frame of rgb_{q} + gt_{q} mask; video = ego|exo overlay_pred."""
+    index = json.load(open(ST/'qual'/'index.json'))
+    index = [r for r in index if not r.get('short')]
+    for direction in ['exo2ego', 'ego2exo']:
+        dirname = 'exo_to_ego' if direction == 'exo2ego' else 'ego_to_exo'; q = 'exo' if direction == 'exo2ego' else 'ego'
+        for name in QUAL_SHORT[direction]:
+            sdir = HF/QUAL_SHORT['set']/dirname/name; w = json.load(open(sdir/'window.json'))
+            tag = 'short_' + name.split('_', 3)[3]  # drop rank/JF prefix
+            od = ST/'qual'/direction; od.mkdir(parents=True, exist_ok=True)
+            img = read_video(sdir/f'rgb_{q}.mp4')[0]; m = read_video(sdir/f'gt_{q}.mp4', gray=True)[0] > 127
+            cv2.imwrite(str(od/f'{tag}_query.jpg'), compose_query(img, m), [cv2.IMWRITE_JPEG_QUALITY, 90])
+            e = read_video(sdir/'ego_overlay_pred.mp4'); x = read_video(sdir/'exo_overlay_pred.mp4'); H = e[0].shape[0]
+            encode([np.concatenate([a, cv2.resize(b, (int(b.shape[1] * H / b.shape[0]), H))], 1) for a, b in zip(e, x)], od/f'{tag}.mp4')
+            index.append({'direction': direction, 'uid': w['take_uid'], 'object': w['object'], 'tag': tag, 'query_cam': q, 'query_frame': None,
+                          'frame_start': None, 'n_frames': len(e), 'short': True, 'rank': w.get('rank'), 'JF': round(w.get('JF', 0), 3),
+                          'video': f'static/qual/{direction}/{tag}.mp4', 'query': f'static/qual/{direction}/{tag}_query.jpg'})
+            print('qual-short', direction, tag, len(e), flush=True)
+    json.dump(index, open(ST/'qual'/'index.json', 'w'), indent=1)
 
 def rebuild_queries():
     """Regenerate only the query images (motivation + qualitative) without touching the videos."""
@@ -96,6 +136,7 @@ def rebuild_queries():
     query_image(uid, exo, obj, fs, ST/'motivation'/'query.jpg')
     index = json.load(open(ST/'qual'/'index.json'))
     for s in index:
+        if s.get('short'): continue
         fs, ego, exo, obj = win[(s['uid'], s['tag'].split('_', 1)[1])]
         query_image(s['uid'], s['query_cam'], obj, fs, PP/s['query']); print('query', s['tag'])
 
@@ -168,3 +209,4 @@ if __name__ == '__main__':
     if 'motivation' in what: build_motivation()
     if 'qual' in what: build_qual()
     if 'queries' in what: rebuild_queries()
+    if 'short' in what: build_qual_short()
