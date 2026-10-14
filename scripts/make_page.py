@@ -36,10 +36,10 @@ def mblock(title, lines, cls):
 
 motiv_html = f"""
 <div class="mgrid">
-  {cell('Query mask &middot; Exo view, first frame', '<img src="static/motivation/query.jpg">', 'wide')}
+  {cell('Query mask (Exo view, first frame)', '<img src="static/motivation/query.jpg">', 'wide')}
   {cell('Ground truth', vid('static/motivation/gt.mp4'))}
   {cell('<b>XTrack (Ours)</b>', vid('static/motivation/ours.mp4'), 'ours')}
-  {mblock('Exo2Ego (Ego-Exo4D dataset)', ['Query: <b>exo</b> &rarr; prediction: <b>ego</b>', '<span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines', '2&times; speed'], 'info')}
+  <div class="mblock" aria-hidden="true"></div>
 
   {mblock('(a) Track-then-Match', ['<span class="x">&#10007;</span> temporally inconsistent matching', '<span class="x">&#10007;</span> false positives when the target is absent'], 'bad')}
   {''.join(cell(name, vid(f'static/motivation/{m}_sam2qt.mp4')) for m, name in METHODS)}
@@ -92,8 +92,8 @@ METHOD_SECTIONS = f"""
 <h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">Within-view semantic verification</h4>
 <p class="dsnote">Geometric verification only <i>selects</i> between the forward and backward candidates, so it cannot recover a chunk where both candidates are wrong.
 Semantic verification complements it: the selected candidate is compared with the first-frame ego anchor, and chunks with low similarity are discarded.</p>
-<div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/vggt_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label"><b>Cross-view geometric verification</b> &mdash; both candidates miss the ball, so selecting one of them is not enough.</div></div>
-<div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/dino_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label"><b>Within-view semantic verification</b> &mdash; compared with the first-frame ego anchor (left, green), the candidates have low DINOv3 similarity and the chunk is discarded.</div></div>
+<div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/vggt_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Cross-view geometric verification &mdash; both candidates miss the ball, so selecting one of them is not enough.</div></div>
+<div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/dino_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Within-view semantic verification &mdash; compared with the first-frame ego anchor (left, green), the candidates have low DINOv3 similarity and the chunk is discarded.</div></div>
 """
 
 html = f'''<!DOCTYPE html>
@@ -148,13 +148,13 @@ html = f'''<!DOCTYPE html>
   .mcard {{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:.9rem 1rem; box-shadow:0 1px 3px rgba(0,0,0,.04); }}
   .mcard-head {{ display:flex; align-items:center; gap:.6rem; margin-bottom:.5rem; }}
   .mcard-icon {{ width:32px; height:32px; border-radius:8px; background:#edf2ff; color:#3b5bdb; display:inline-flex; align-items:center; justify-content:center; }}
-  .mcard-title {{ font-weight:700; font-size:.98rem; white-space:nowrap; }}
-  .mcard-list {{ list-style:none; padding-left:0; font-size:.88rem; color:#444; }}
+  .mcard-title {{ font-weight:700; font-size:1.15rem; white-space:nowrap; }}
+  .mcard-list {{ list-style:none; padding-left:0; font-size:1rem; color:#444; }}
   .mcard-list li {{ margin-bottom:.3rem; }}
-  .step {{ display:flex; gap:.7rem; font-size:.92rem; }}
+  .step {{ display:flex; gap:.7rem; font-size:1rem; }}
   .dsrow video {{ width:100%; max-width:1212px; display:block; margin:0 auto; border-radius:8px; background:#000; }}
   .dsrow {{ margin-bottom:.6rem; }}
-  .dsnote {{ font-size:.92rem; color:#444; margin-bottom:.5rem; }}
+  .dsnote {{ font-size:1rem; color:#444; margin-bottom:.5rem; }}
   .step-n {{ flex:0 0 26px; height:26px; border-radius:50%; background:#d3f9d8; color:#2b8a3e; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }}
   /* ---- qualitative ---- */
   .qual-grid {{ display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; }}
@@ -211,7 +211,7 @@ html = f'''<!DOCTYPE html>
     <div class="ctrl has-text-centered" style="margin-top:1rem">
       <button class="button is-small" onclick="syncRestart('motiv')"><i class="fas fa-rotate-left"></i>&nbsp;Restart</button>
       <button class="button is-small" onclick="syncToggle('motiv')" id="btn-motiv"><i class="fas fa-pause"></i>&nbsp;Pause</button>
-      <span class="speed-note">Synchronized videos, 2&times; speed.</span>
+
     </div>
     <div class="motiv">{motiv_html}</div>
   </div>
