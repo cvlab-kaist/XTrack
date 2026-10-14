@@ -37,9 +37,9 @@ def mblock(title, lines, cls):
 motiv_html = f"""
 <div class="mgrid">
   {cell('Query mask &middot; Exo view, first frame', '<img src="static/motivation/query.jpg">', 'wide')}
-  {cell('Ground truth &middot; Ego', vid('static/motivation/gt.mp4'))}
-  {cell('<b>XTrack (Ours)</b> &middot; Ego', vid('static/motivation/ours.mp4'), 'ours')}
-  {mblock('Exo2Ego &middot; Ego-Exo4D', ['Query: <b>exo</b> view &rarr; prediction: <b>ego</b> view', 'The board leaves the ego view, then <b>reappears</b>.', '<span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines', '2&times; speed'], 'info')}
+  {cell('Ground truth', vid('static/motivation/gt.mp4'))}
+  {cell('<b>XTrack (Ours)</b>', vid('static/motivation/ours.mp4'), 'ours')}
+  {mblock('Exo2Ego &middot; Ego-Exo4D', ['Query: <b>exo</b> view &rarr; prediction: <b>ego</b> view', '<span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines', '2&times; speed'], 'info')}
 
   {mblock('(a) Track-then-Match', ['&#10007; temporally inconsistent matching', '&#10007; false positives when the target is absent'], 'bad')}
   {''.join(cell(name, vid(f'static/motivation/{m}_sam2qt.mp4')) for m, name in METHODS)}
@@ -128,7 +128,9 @@ html = f'''<!DOCTYPE html>
   .mgrid {{ display:grid; grid-template-columns:repeat(6, 1fr); gap:.45rem; align-items:start; }}
   .mblock {{ grid-column:span 2; border-radius:8px; padding:.55rem .7rem; font-size:.82rem; line-height:1.35; }}
   .mblock.info {{ background:#eef1f5; }}
-  .mblock.bad {{ background:#fff0f0; color:#b02a2a; }}
+  .mblock.bad {{ background:none; padding-left:.2rem; }}
+  .mblock.bad .mtitle {{ font-size:1.7rem; color:var(--ink); line-height:1.2; margin-bottom:.5rem; }}
+  .mblock.bad .mline {{ font-size:1.15rem; color:var(--red); font-weight:600; margin-bottom:.3rem; }}
   .mtitle {{ font-weight:700; font-size:.95rem; margin-bottom:.25rem; }}
   .mline {{ margin-bottom:.15rem; }}
   .mblock .sw {{ display:inline-block; width:10px; height:10px; border-radius:2px; vertical-align:middle; }}
