@@ -58,14 +58,46 @@ def gt_for(uid, cam, obj):
     gs = json.load(open(GTANN/uid/'final_total_refined_masks_rle.json')).get(cam, {}).get(obj, {})
     for k, v in gs.items(): g.setdefault(k, v)
     return g
-def query_image(uid, qcam, obj, fs, out):
+def query_image(uid, qcam, obj, fs, out, zoom_if_smaller_than=0.45):
+    """Query-view first frame with the GT query mask. If the object is small, the main image is a zoom crop
+    (same aspect as the frame) around the object and the full frame is shown as an inset with the crop box."""
     g = gt_for(uid, qcam, obj)
     cand = sorted(int(k) for k in g if int(k) >= fs)
     fq = fs if str(fs) in g else (cand[0] if cand else fs)
-    img = cv2.imread(str(GTANN/uid/qcam/'frames'/f'{fq}.jpg'))
+    img = cv2.imread(str(GTANN/uid/qcam/'frames'/f'{fq}.jpg')); H, W = img.shape[:2]
+    m = fit(dec(g.get(str(fq))), img)
+    main = paint(img, m, GREEN, alpha=0.45, th=3)
+    if m is not None and m.any():
+        ys, xs = np.where(m); bw, bh = xs.max() - xs.min() + 1, ys.max() - ys.min() + 1
+        if bw < zoom_if_smaller_than * W and bh < zoom_if_smaller_than * H:
+            side = max(bw, bh) * 2.6; cw, ch = side * W / max(W, H), side * H / max(W, H)
+            if W >= H: cw, ch = max(side * W / H, bw * 2.2), max(side, bh * 2.2)
+            else: cw, ch = max(side, bw * 2.2), max(side * H / W, bh * 2.2)
+            cw, ch = max(cw, 0.42 * W), max(ch, 0.42 * H)  # limit the zoom factor to ~2.4x so the crop stays sharp
+            cw, ch = int(min(cw, W)), int(min(ch, H))
+            cx, cy = (xs.min() + xs.max()) // 2, (ys.min() + ys.max()) // 2
+            x0 = int(np.clip(cx - cw // 2, 0, W - cw)); y0 = int(np.clip(cy - ch // 2, 0, H - ch))
+            zoom = cv2.resize(main[y0:y0 + ch, x0:x0 + cw], (W, H), interpolation=cv2.INTER_CUBIC)
+            full = paint(img, m, GREEN, alpha=0.45, th=2); cv2.rectangle(full, (x0, y0), (x0 + cw, y0 + ch), (0, 220, 255), 3)
+            iw = int(W * 0.34); ih = int(H * 0.34); ins = cv2.resize(full, (iw, ih), interpolation=cv2.INTER_AREA)
+            cv2.rectangle(ins, (0, 0), (iw - 1, ih - 1), (255, 255, 255), 2)
+            zoom[H - ih - 8:H - 8, 8:8 + iw] = ins
+            cv2.putText(zoom, 'zoom', (W - 62, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 3, cv2.LINE_AA)
+            cv2.putText(zoom, 'zoom', (W - 62, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
+            main = zoom
     out.parent.mkdir(parents=True, exist_ok=True)
-    cv2.imwrite(str(out), paint(img, dec(g.get(str(fq))), GREEN, alpha=0.45, th=3), [cv2.IMWRITE_JPEG_QUALITY, 90])
+    cv2.imwrite(str(out), main, [cv2.IMWRITE_JPEG_QUALITY, 90])
     return fq
+
+def rebuild_queries():
+    """Regenerate only the query images (motivation + qualitative) without touching the videos."""
+    uid, obj_safe = 'd6f0adfc-5c66-4c3e-95b0-902d12d7bb86', 'cutting_board_0'
+    fs, ego, exo, obj = win[(uid, obj_safe)]
+    query_image(uid, exo, obj, fs, ST/'motivation'/'query.jpg')
+    index = json.load(open(ST/'qual'/'index.json'))
+    for s in index:
+        fs, ego, exo, obj = win[(s['uid'], s['tag'].split('_', 1)[1])]
+        query_image(s['uid'], s['query_cam'], obj, fs, PP/s['query']); print('query', s['tag'])
 
 # ───────────────────────── A. motivation ─────────────────────────
 def build_motivation():
@@ -135,3 +167,4 @@ if __name__ == '__main__':
     what = sys.argv[1:] or ['motivation', 'qual']
     if 'motivation' in what: build_motivation()
     if 'qual' in what: build_qual()
+    if 'queries' in what: rebuild_queries()

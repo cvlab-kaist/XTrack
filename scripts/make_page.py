@@ -39,7 +39,7 @@ motiv_html = f"""
   {cell('Query mask &middot; Exo view, first frame', '<img src="static/motivation/query.jpg">', 'wide')}
   {cell('Ground truth &middot; Ego', vid('static/motivation/gt.mp4'))}
   {cell('<b>XTrack (Ours)</b> &middot; Ego', vid('static/motivation/ours.mp4'), 'ours')}
-  {mblock('Exo2Ego, Ego-Exo4D', ['Query given in the <b>exo</b> view; masks predicted in the <b>ego</b> view.', 'The board leaves the ego view and <b>reappears</b> near the end.', '<span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines', '2&times; speed, synchronized'], 'info')}
+  {mblock('Exo2Ego &middot; Ego-Exo4D', ['Query: <b>exo</b> view &rarr; prediction: <b>ego</b> view', 'The board leaves the ego view, then <b>reappears</b>.', '<span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines', '2&times; speed'], 'info')}
 
   {mblock('(a) Track-then-Match', ['&#10007; temporally inconsistent matching', '&#10007; false positives when the target is absent'], 'bad')}
   {''.join(cell(name, vid(f'static/motivation/{m}_sam2qt.mp4')) for m, name in METHODS)}
@@ -54,7 +54,7 @@ def qual_cards(direction):
     cards = []
     for s in [q for q in qual if q['direction'] == direction]:
         cards.append(f'''<div class="qual-card">
-  <div class="qual-query"><img src="{s['query']}"><div class="cell-label">Query mask ({qv} view, first frame)</div></div>
+  <div class="qual-query"><img src="{s['query']}"><div class="cell-label">Query mask<br>({qv} view, first frame)</div></div>
   <div class="qual-video">{vid(s['video'], 'qual-vid', 'qual-' + direction)}<div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div>''')
     return ''.join(cards)
@@ -68,53 +68,33 @@ METHOD_SECTIONS = f"""
 <div class="caption" style="margin-bottom:1.2rem">Overall architecture. Ego and exo videos enter a pretrained video DiT as a <b>diptych</b>; the model transports RGB latents to mask latents for both views at once.</div>
 
 <div class="mcards">
-  {card('fa-arrow-right-arrow-left', 'RGB &rarr; mask flow, not noise &rarr; RGB',
-        ['Flow-matching endpoints redefined: source = RGB latent, target = mask latent.',
-         'The source already encodes scene layout, appearance and motion, so the DiT only has to <b>convert evidence into masks</b>.',
-         'Keeps the video DiT\'s spatiotemporal and semantic priors intact.'])}
-  {card('fa-table-columns', 'One token space for both views',
-        ['Ego and exo frames are concatenated side by side; query mask conditions one side, the other side gets an empty mask.',
-         'Full 3D attention = <b>within-view</b> (tracking) + <b>cross-view</b> (matching) in every layer.',
-         'Ambiguity in one view is resolved with the other view, with no fixed initial match.'])}
-  {card('fa-bullseye', 'Focal attention alignment',
-        ['Cross-view attention can drift to distractors.',
-         'Supervise target-side foreground tokens to attend to query-side foreground.',
-         'Focal weight: strong when grounding is weak, off when already correct.'])}
-  {card('fa-code-compare', 'Hard negative conditioning',
-        ['Feed the <b>wrong object\'s mask</b> as a mismatched query.',
-         'Margin loss forces the two predictions apart.',
-         'Prediction depends on query identity, not on generic saliency.'])}
-  {card('fa-magnifying-glass-plus', 'Local context crop for small objects',
-        ['Object-centred crop encoded as extra tokens next to the global ego-exo tokens.',
-         'RoPE positions copied from the crop\'s <b>original coordinates</b>, so local detail stays spatially aligned with the scene.'])}
-  {card('fa-layer-group', 'Two-stage training',
-        ['<b>Stage 1</b> &mdash; paired frames with a <b>cycle-consistency</b> loss: predict the other view, map back, must recover the query mask.',
-         '<b>Stage 2</b> &mdash; video fine-tuning on dense curated pseudo-labels (below).',
-         'Inference: both views predicted jointly over time in a single pass.'],
-        '<img class="figure-img" src="static/images/fig3_cycle.png" alt="cycle consistency" style="margin-top:.5rem;max-width:360px">')}
+  {card('fa-arrow-right-arrow-left', 'RGB-to-mask flow', ['Flow matching from the RGB latent to the mask latent, keeping the video DiT priors.'])}
+  {card('fa-table-columns', 'Unified ego-exo tokens', ['Both views in one diptych; cross-view matching and tracking in the same attention.'])}
+  {card('fa-bullseye', 'Focal attention alignment', ['Cross-view attention is supervised to land on the query object.'])}
+  {card('fa-code-compare', 'Hard negative conditioning', ['A mismatched query must give a different prediction.'])}
+  {card('fa-magnifying-glass-plus', 'Local context crop', ['Object crop tokens with original RoPE positions for small objects.'])}
+  {card('fa-layer-group', 'Two-stage training', ['Image-level cycle-consistency pretraining, then video fine-tuning on curated pseudo-labels.'],
+        '<img class="figure-img" src="static/images/fig3_cycle.png" alt="cycle consistency" style="margin-top:.5rem;max-width:300px">')}
 </div>
 
 <h3 class="title is-5" style="margin-top:2rem">Pseudo-label curation: 1 FPS annotations &rarr; dense, verified labels</h3>
-<video class="figure-img" src="static/method/pseudolabel.mp4" muted autoplay loop playsinline preload="metadata" style="border-radius:10px"></video>
-<div class="caption">Illustration on an Ego-Exo4D clip (2&times; speed). SAM2 is propagated <span style="color:#b05cd6">forward</span> and <span style="color:#b08a00">backward</span> between consecutive 1-FPS anchors (yellow border).
-Chunks where the two disagree are flagged and refined; the curated labels (right) keep only candidates verified against the static exo view.
-<a href="static/images/fig4_pseudolabel.png" target="_blank">Pipeline figure from the paper</a>.</div>
-<div class="columns" style="margin-top:.8rem">
-  <div class="column"><div class="step"><span class="step-n">a</span><div><b>Bidirectional propagation</b><br>Forward and backward SAM2 between anchors; low forward/backward mIoU marks unreliable chunks.</div></div></div>
-  <div class="column"><div class="step"><span class="step-n">b</span><div><b>Cross-view geometric verification</b><br>VGGT similarity between each ego candidate and the exo pseudo-GT picks the consistent one.</div></div></div>
-  <div class="column"><div class="step"><span class="step-n">c</span><div><b>Within-view semantic verification</b><br>DINOv3 similarity to the ego anchor removes the remaining wrong masks.</div></div></div>
+<div class="columns" style="margin-top:.2rem">
+  <div class="column"><div class="step"><span class="step-n">a</span><div><b>Bidirectional propagation</b><br>Forward and backward SAM2 between anchors; low agreement marks unreliable chunks.</div></div></div>
+  <div class="column"><div class="step"><span class="step-n">b</span><div><b>Cross-view geometric verification</b><br>VGGT similarity to the exo view picks the consistent candidate.</div></div></div>
+  <div class="column"><div class="step"><span class="step-n">c</span><div><b>Within-view semantic verification</b><br>DINOv3 similarity to the ego anchor discards the remaining wrong masks.</div></div></div>
 </div>
+<div class="caption" style="text-align:left;margin-bottom:.6rem"><a href="static/images/fig4_pseudolabel.png" target="_blank">Pipeline figure from the paper</a></div>
 
 <h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">(b) Cross-view geometric verification with VGGT</h4>
-<p class="dsnote">Exo query (left), the two ego candidates from forward (red) and backward (blue) propagation, and the candidate selected by VGGT similarity to the exo view (right).</p>
-<div class="dsrow"><video class="sync" data-group="ds1" src="static/dataset/vggt_basketball.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Basketball &mdash; forward and backward disagree; VGGT selects the candidate consistent with the exo view.</div></div>
-<div class="dsrow"><video class="sync" data-group="ds2" src="static/dataset/vggt_bike.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Bike repair &mdash; the wheel hub is small in the ego view, but the exo reference still disambiguates the candidates.</div></div>
+<p class="dsnote">Exo query (left), the forward (red) and backward (blue) ego candidates, and the candidate selected by VGGT similarity to the exo view (right).</p>
+<div class="dsrow"><video class="sync" data-group="ds1" src="static/dataset/vggt_basketball_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Basketball &mdash; forward and backward disagree; VGGT selects the candidate consistent with the exo view.</div></div>
+<div class="dsrow"><video class="sync" data-group="ds2" src="static/dataset/vggt_bike_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Bike repair &mdash; the wheel hub is small in the ego view, but the exo reference still disambiguates the candidates.</div></div>
 
 <h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">(c) When geometric verification fails, semantic verification discards the chunk</h4>
 <p class="dsnote">Small, fast-moving objects can fool the geometric check. Here VGGT selects a candidate that is not the ball; its DINOv3 similarity to the ego anchor is low, so the chunk is discarded instead of entering the training set.</p>
 <div class="columns is-vcentered">
-  <div class="column is-8"><div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/vggt_soccer.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">VGGT picks the wrong candidate (soccer ball).</div></div></div>
-  <div class="column is-4"><div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/dino_soccer.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Within-view DINOv3 check: low similarity &rarr; discarded.</div></div></div>
+  <div class="column is-8"><div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/vggt_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">VGGT picks the wrong candidate (soccer ball).</div></div></div>
+  <div class="column is-4"><div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/dino_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Within-view DINOv3 check: low similarity &rarr; discarded.</div></div></div>
 </div>
 """
 
@@ -166,11 +146,11 @@ html = f'''<!DOCTYPE html>
   .mcard {{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:.9rem 1rem; box-shadow:0 1px 3px rgba(0,0,0,.04); }}
   .mcard-head {{ display:flex; align-items:center; gap:.6rem; margin-bottom:.5rem; }}
   .mcard-icon {{ width:32px; height:32px; border-radius:8px; background:#edf2ff; color:#3b5bdb; display:inline-flex; align-items:center; justify-content:center; }}
-  .mcard-title {{ font-weight:700; font-size:1rem; }}
-  .mcard-list {{ list-style:disc; padding-left:1.1rem; font-size:.9rem; color:#333; }}
+  .mcard-title {{ font-weight:700; font-size:.98rem; white-space:nowrap; }}
+  .mcard-list {{ list-style:none; padding-left:0; font-size:.88rem; color:#444; }}
   .mcard-list li {{ margin-bottom:.3rem; }}
   .step {{ display:flex; gap:.7rem; font-size:.92rem; }}
-  .dsrow video {{ width:100%; display:block; border-radius:8px; background:#000; }}
+  .dsrow video {{ width:100%; max-width:1212px; display:block; margin:0 auto; border-radius:8px; background:#000; }}
   .dsrow {{ margin-bottom:.6rem; }}
   .dsnote {{ font-size:.92rem; color:#444; margin-bottom:.5rem; }}
   .step-n {{ flex:0 0 26px; height:26px; border-radius:50%; background:#d3f9d8; color:#2b8a3e; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }}
@@ -224,7 +204,7 @@ html = f'''<!DOCTYPE html>
     Extending frame-level matchers with a tracker yields two decoupled pipelines, and both break under temporary disappearance and viewpoint change.
     XTrack predicts masks jointly across views and time within a single video DiT.</p>
     <img class="figure-img fig1" src="static/images/fig1_paradigms.png" alt="paradigms">
-    <div class="caption">(a) Track-then-Match propagates the query mask in the query view and matches it per frame. (b) Match-then-Track estimates one initial match and tracks each view independently. (c) XTrack jointly models cross-view correspondence and temporal dynamics.</div>
+    <div class="caption">(a) Track-then-Match propagates the query mask in the query view and matches it per frame.<br>(b) Match-then-Track estimates one initial match and tracks each view independently.<br>(c) XTrack jointly models cross-view correspondence and temporal dynamics.</div>
 
     <div class="ctrl has-text-centered" style="margin-top:1rem">
       <button class="button is-small" onclick="syncRestart('motiv')"><i class="fas fa-rotate-left"></i>&nbsp;Restart</button>

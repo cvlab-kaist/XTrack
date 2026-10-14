@@ -46,11 +46,11 @@
   .mcard { background:#fff; border:1px solid var(--line); border-radius:12px; padding:.9rem 1rem; box-shadow:0 1px 3px rgba(0,0,0,.04); }
   .mcard-head { display:flex; align-items:center; gap:.6rem; margin-bottom:.5rem; }
   .mcard-icon { width:32px; height:32px; border-radius:8px; background:#edf2ff; color:#3b5bdb; display:inline-flex; align-items:center; justify-content:center; }
-  .mcard-title { font-weight:700; font-size:1rem; }
-  .mcard-list { list-style:disc; padding-left:1.1rem; font-size:.9rem; color:#333; }
+  .mcard-title { font-weight:700; font-size:.98rem; white-space:nowrap; }
+  .mcard-list { list-style:none; padding-left:0; font-size:.88rem; color:#444; }
   .mcard-list li { margin-bottom:.3rem; }
   .step { display:flex; gap:.7rem; font-size:.92rem; }
-  .dsrow video { width:100%; display:block; border-radius:8px; background:#000; }
+  .dsrow video { width:100%; max-width:1212px; display:block; margin:0 auto; border-radius:8px; background:#000; }
   .dsrow { margin-bottom:.6rem; }
   .dsnote { font-size:.92rem; color:#444; margin-bottom:.5rem; }
   .step-n { flex:0 0 26px; height:26px; border-radius:50%; background:#d3f9d8; color:#2b8a3e; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
@@ -104,7 +104,7 @@
     Extending frame-level matchers with a tracker yields two decoupled pipelines, and both break under temporary disappearance and viewpoint change.
     XTrack predicts masks jointly across views and time within a single video DiT.</p>
     <img class="figure-img fig1" src="static/images/fig1_paradigms.png" alt="paradigms">
-    <div class="caption">(a) Track-then-Match propagates the query mask in the query view and matches it per frame. (b) Match-then-Track estimates one initial match and tracks each view independently. (c) XTrack jointly models cross-view correspondence and temporal dynamics.</div>
+    <div class="caption">(a) Track-then-Match propagates the query mask in the query view and matches it per frame.<br>(b) Match-then-Track estimates one initial match and tracks each view independently.<br>(c) XTrack jointly models cross-view correspondence and temporal dynamics.</div>
 
     <div class="ctrl has-text-centered" style="margin-top:1rem">
       <button class="button is-small" onclick="syncRestart('motiv')"><i class="fas fa-rotate-left"></i>&nbsp;Restart</button>
@@ -116,7 +116,7 @@
   <div class="cell wide"><img src="static/motivation/query.jpg"><div class="cell-label">Query mask &middot; Exo view, first frame</div></div>
   <div class="cell "><video class="sync " data-group="motiv" src="static/motivation/gt.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Ground truth &middot; Ego</div></div>
   <div class="cell ours"><video class="sync " data-group="motiv" src="static/motivation/ours.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label"><b>XTrack (Ours)</b> &middot; Ego</div></div>
-  <div class="mblock info"><div class="mtitle">Exo2Ego, Ego-Exo4D</div><div class="mline">Query given in the <b>exo</b> view; masks predicted in the <b>ego</b> view.</div><div class="mline">The board leaves the ego view and <b>reappears</b> near the end.</div><div class="mline"><span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines</div><div class="mline">2&times; speed, synchronized</div></div>
+  <div class="mblock info"><div class="mtitle">Exo2Ego &middot; Ego-Exo4D</div><div class="mline">Query: <b>exo</b> view &rarr; prediction: <b>ego</b> view</div><div class="mline">The board leaves the ego view, then <b>reappears</b>.</div><div class="mline"><span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines</div><div class="mline">2&times; speed</div></div>
 
   <div class="mblock bad"><div class="mtitle">(a) Track-then-Match</div><div class="mline">&#10007; temporally inconsistent matching</div><div class="mline">&#10007; false positives when the target is absent</div></div>
   <div class="cell "><video class="sync " data-group="motiv" src="static/motivation/objectrelator_sam2qt.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">ObjectRelator</div></div><div class="cell "><video class="sync " data-group="motiv" src="static/motivation/omama_sam2qt.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">O-MaMa</div></div><div class="cell "><video class="sync " data-group="motiv" src="static/motivation/lmeec_sam2qt.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">LM-EEC</div></div><div class="cell "><video class="sync " data-group="motiv" src="static/motivation/v2sam_sam2qt.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">V2-SAM</div></div>
@@ -136,41 +136,38 @@
 <div class="caption" style="margin-bottom:1.2rem">Overall architecture. Ego and exo videos enter a pretrained video DiT as a <b>diptych</b>; the model transports RGB latents to mask latents for both views at once.</div>
 
 <div class="mcards">
-  <div class="mcard"><div class="mcard-head"><span class="mcard-icon"><i class="fas fa-arrow-right-arrow-left"></i></span><span class="mcard-title">RGB &rarr; mask flow, not noise &rarr; RGB</span></div>
-<ul class="mcard-list"><li>Flow-matching endpoints redefined: source = RGB latent, target = mask latent.</li><li>The source already encodes scene layout, appearance and motion, so the DiT only has to <b>convert evidence into masks</b>.</li><li>Keeps the video DiT's spatiotemporal and semantic priors intact.</li></ul></div>
-  <div class="mcard"><div class="mcard-head"><span class="mcard-icon"><i class="fas fa-table-columns"></i></span><span class="mcard-title">One token space for both views</span></div>
-<ul class="mcard-list"><li>Ego and exo frames are concatenated side by side; query mask conditions one side, the other side gets an empty mask.</li><li>Full 3D attention = <b>within-view</b> (tracking) + <b>cross-view</b> (matching) in every layer.</li><li>Ambiguity in one view is resolved with the other view, with no fixed initial match.</li></ul></div>
+  <div class="mcard"><div class="mcard-head"><span class="mcard-icon"><i class="fas fa-arrow-right-arrow-left"></i></span><span class="mcard-title">RGB-to-mask flow</span></div>
+<ul class="mcard-list"><li>Flow matching from the RGB latent to the mask latent, keeping the video DiT priors.</li></ul></div>
+  <div class="mcard"><div class="mcard-head"><span class="mcard-icon"><i class="fas fa-table-columns"></i></span><span class="mcard-title">Unified ego-exo tokens</span></div>
+<ul class="mcard-list"><li>Both views in one diptych; cross-view matching and tracking in the same attention.</li></ul></div>
   <div class="mcard"><div class="mcard-head"><span class="mcard-icon"><i class="fas fa-bullseye"></i></span><span class="mcard-title">Focal attention alignment</span></div>
-<ul class="mcard-list"><li>Cross-view attention can drift to distractors.</li><li>Supervise target-side foreground tokens to attend to query-side foreground.</li><li>Focal weight: strong when grounding is weak, off when already correct.</li></ul></div>
+<ul class="mcard-list"><li>Cross-view attention is supervised to land on the query object.</li></ul></div>
   <div class="mcard"><div class="mcard-head"><span class="mcard-icon"><i class="fas fa-code-compare"></i></span><span class="mcard-title">Hard negative conditioning</span></div>
-<ul class="mcard-list"><li>Feed the <b>wrong object's mask</b> as a mismatched query.</li><li>Margin loss forces the two predictions apart.</li><li>Prediction depends on query identity, not on generic saliency.</li></ul></div>
-  <div class="mcard"><div class="mcard-head"><span class="mcard-icon"><i class="fas fa-magnifying-glass-plus"></i></span><span class="mcard-title">Local context crop for small objects</span></div>
-<ul class="mcard-list"><li>Object-centred crop encoded as extra tokens next to the global ego-exo tokens.</li><li>RoPE positions copied from the crop's <b>original coordinates</b>, so local detail stays spatially aligned with the scene.</li></ul></div>
+<ul class="mcard-list"><li>A mismatched query must give a different prediction.</li></ul></div>
+  <div class="mcard"><div class="mcard-head"><span class="mcard-icon"><i class="fas fa-magnifying-glass-plus"></i></span><span class="mcard-title">Local context crop</span></div>
+<ul class="mcard-list"><li>Object crop tokens with original RoPE positions for small objects.</li></ul></div>
   <div class="mcard"><div class="mcard-head"><span class="mcard-icon"><i class="fas fa-layer-group"></i></span><span class="mcard-title">Two-stage training</span></div>
-<ul class="mcard-list"><li><b>Stage 1</b> &mdash; paired frames with a <b>cycle-consistency</b> loss: predict the other view, map back, must recover the query mask.</li><li><b>Stage 2</b> &mdash; video fine-tuning on dense curated pseudo-labels (below).</li><li>Inference: both views predicted jointly over time in a single pass.</li></ul><img class="figure-img" src="static/images/fig3_cycle.png" alt="cycle consistency" style="margin-top:.5rem;max-width:360px"></div>
+<ul class="mcard-list"><li>Image-level cycle-consistency pretraining, then video fine-tuning on curated pseudo-labels.</li></ul><img class="figure-img" src="static/images/fig3_cycle.png" alt="cycle consistency" style="margin-top:.5rem;max-width:300px"></div>
 </div>
 
 <h3 class="title is-5" style="margin-top:2rem">Pseudo-label curation: 1 FPS annotations &rarr; dense, verified labels</h3>
-<video class="figure-img" src="static/method/pseudolabel.mp4" muted autoplay loop playsinline preload="metadata" style="border-radius:10px"></video>
-<div class="caption">Illustration on an Ego-Exo4D clip (2&times; speed). SAM2 is propagated <span style="color:#b05cd6">forward</span> and <span style="color:#b08a00">backward</span> between consecutive 1-FPS anchors (yellow border).
-Chunks where the two disagree are flagged and refined; the curated labels (right) keep only candidates verified against the static exo view.
-<a href="static/images/fig4_pseudolabel.png" target="_blank">Pipeline figure from the paper</a>.</div>
-<div class="columns" style="margin-top:.8rem">
-  <div class="column"><div class="step"><span class="step-n">a</span><div><b>Bidirectional propagation</b><br>Forward and backward SAM2 between anchors; low forward/backward mIoU marks unreliable chunks.</div></div></div>
-  <div class="column"><div class="step"><span class="step-n">b</span><div><b>Cross-view geometric verification</b><br>VGGT similarity between each ego candidate and the exo pseudo-GT picks the consistent one.</div></div></div>
-  <div class="column"><div class="step"><span class="step-n">c</span><div><b>Within-view semantic verification</b><br>DINOv3 similarity to the ego anchor removes the remaining wrong masks.</div></div></div>
+<div class="columns" style="margin-top:.2rem">
+  <div class="column"><div class="step"><span class="step-n">a</span><div><b>Bidirectional propagation</b><br>Forward and backward SAM2 between anchors; low agreement marks unreliable chunks.</div></div></div>
+  <div class="column"><div class="step"><span class="step-n">b</span><div><b>Cross-view geometric verification</b><br>VGGT similarity to the exo view picks the consistent candidate.</div></div></div>
+  <div class="column"><div class="step"><span class="step-n">c</span><div><b>Within-view semantic verification</b><br>DINOv3 similarity to the ego anchor discards the remaining wrong masks.</div></div></div>
 </div>
+<div class="caption" style="text-align:left;margin-bottom:.6rem"><a href="static/images/fig4_pseudolabel.png" target="_blank">Pipeline figure from the paper</a></div>
 
 <h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">(b) Cross-view geometric verification with VGGT</h4>
-<p class="dsnote">Exo query (left), the two ego candidates from forward (red) and backward (blue) propagation, and the candidate selected by VGGT similarity to the exo view (right).</p>
-<div class="dsrow"><video class="sync" data-group="ds1" src="static/dataset/vggt_basketball.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Basketball &mdash; forward and backward disagree; VGGT selects the candidate consistent with the exo view.</div></div>
-<div class="dsrow"><video class="sync" data-group="ds2" src="static/dataset/vggt_bike.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Bike repair &mdash; the wheel hub is small in the ego view, but the exo reference still disambiguates the candidates.</div></div>
+<p class="dsnote">Exo query (left), the forward (red) and backward (blue) ego candidates, and the candidate selected by VGGT similarity to the exo view (right).</p>
+<div class="dsrow"><video class="sync" data-group="ds1" src="static/dataset/vggt_basketball_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Basketball &mdash; forward and backward disagree; VGGT selects the candidate consistent with the exo view.</div></div>
+<div class="dsrow"><video class="sync" data-group="ds2" src="static/dataset/vggt_bike_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Bike repair &mdash; the wheel hub is small in the ego view, but the exo reference still disambiguates the candidates.</div></div>
 
 <h4 class="title is-6" style="margin-top:1.6rem;margin-bottom:.4rem">(c) When geometric verification fails, semantic verification discards the chunk</h4>
 <p class="dsnote">Small, fast-moving objects can fool the geometric check. Here VGGT selects a candidate that is not the ball; its DINOv3 similarity to the ego anchor is low, so the chunk is discarded instead of entering the training set.</p>
 <div class="columns is-vcentered">
-  <div class="column is-8"><div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/vggt_soccer.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">VGGT picks the wrong candidate (soccer ball).</div></div></div>
-  <div class="column is-4"><div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/dino_soccer.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Within-view DINOv3 check: low similarity &rarr; discarded.</div></div></div>
+  <div class="column is-8"><div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/vggt_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">VGGT picks the wrong candidate (soccer ball).</div></div></div>
+  <div class="column is-4"><div class="dsrow"><video class="sync" data-group="ds3" src="static/dataset/dino_soccer_packed.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">Within-view DINOv3 check: low similarity &rarr; discarded.</div></div></div>
 </div>
 
   </div>
@@ -187,47 +184,47 @@ Chunks where the two disagree are flagged and refined; the curated labels (right
       </ul>
     </div>
     <div class="qual-grid" id="qual-exo2ego"><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/exo2ego/2ca53d8d_chopping_board_0_query.jpg"><div class="cell-label">Query mask (Exo view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/exo2ego/2ca53d8d_chopping_board_0_query.jpg"><div class="cell-label">Query mask<br>(Exo view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-exo2ego" src="static/qual/exo2ego/2ca53d8d_chopping_board_0.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/exo2ego/0fe5b647_piano_query.jpg"><div class="cell-label">Query mask (Exo view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/exo2ego/0fe5b647_piano_query.jpg"><div class="cell-label">Query mask<br>(Exo view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-exo2ego" src="static/qual/exo2ego/0fe5b647_piano.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/exo2ego/ae2207b2_sheet_music_query.jpg"><div class="cell-label">Query mask (Exo view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/exo2ego/ae2207b2_sheet_music_query.jpg"><div class="cell-label">Query mask<br>(Exo view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-exo2ego" src="static/qual/exo2ego/ae2207b2_sheet_music.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/exo2ego/32dfc6fe_soccer_ball_query.jpg"><div class="cell-label">Query mask (Exo view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/exo2ego/32dfc6fe_soccer_ball_query.jpg"><div class="cell-label">Query mask<br>(Exo view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-exo2ego" src="static/qual/exo2ego/32dfc6fe_soccer_ball.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/exo2ego/9e08e1e7_hoop_query.jpg"><div class="cell-label">Query mask (Exo view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/exo2ego/9e08e1e7_hoop_query.jpg"><div class="cell-label">Query mask<br>(Exo view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-exo2ego" src="static/qual/exo2ego/9e08e1e7_hoop.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/exo2ego/dc1600e9_CPR_dummy_query.jpg"><div class="cell-label">Query mask (Exo view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/exo2ego/dc1600e9_CPR_dummy_query.jpg"><div class="cell-label">Query mask<br>(Exo view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-exo2ego" src="static/qual/exo2ego/dc1600e9_CPR_dummy.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/exo2ego/2d042a82_scrambled_egg_0_query.jpg"><div class="cell-label">Query mask (Exo view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/exo2ego/2d042a82_scrambled_egg_0_query.jpg"><div class="cell-label">Query mask<br>(Exo view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-exo2ego" src="static/qual/exo2ego/2d042a82_scrambled_egg_0.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div></div>
     <div class="qual-grid" id="qual-ego2exo" style="display:none"><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/ego2exo/b74169ba_sheet_music_query.jpg"><div class="cell-label">Query mask (Ego view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/ego2exo/b74169ba_sheet_music_query.jpg"><div class="cell-label">Query mask<br>(Ego view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-ego2exo" src="static/qual/ego2exo/b74169ba_sheet_music.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/ego2exo/d8db054f_piano_query.jpg"><div class="cell-label">Query mask (Ego view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/ego2exo/d8db054f_piano_query.jpg"><div class="cell-label">Query mask<br>(Ego view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-ego2exo" src="static/qual/ego2exo/d8db054f_piano.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/ego2exo/b63d213f_hoop_query.jpg"><div class="cell-label">Query mask (Ego view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/ego2exo/b63d213f_hoop_query.jpg"><div class="cell-label">Query mask<br>(Ego view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-ego2exo" src="static/qual/ego2exo/b63d213f_hoop.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/ego2exo/4d799166_egg_crate_0_query.jpg"><div class="cell-label">Query mask (Ego view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/ego2exo/4d799166_egg_crate_0_query.jpg"><div class="cell-label">Query mask<br>(Ego view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-ego2exo" src="static/qual/ego2exo/4d799166_egg_crate_0.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/ego2exo/2d042a82_scrambled_egg_0_query.jpg"><div class="cell-label">Query mask (Ego view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/ego2exo/2d042a82_scrambled_egg_0_query.jpg"><div class="cell-label">Query mask<br>(Ego view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-ego2exo" src="static/qual/ego2exo/2d042a82_scrambled_egg_0.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/ego2exo/79a728ac_violin_bow_query.jpg"><div class="cell-label">Query mask (Ego view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/ego2exo/79a728ac_violin_bow_query.jpg"><div class="cell-label">Query mask<br>(Ego view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-ego2exo" src="static/qual/ego2exo/79a728ac_violin_bow.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div><div class="qual-card">
-  <div class="qual-query"><img src="static/qual/ego2exo/5c12c6e3_disposable_swab_with_package_0_query.jpg"><div class="cell-label">Query mask (Ego view, first frame)</div></div>
+  <div class="qual-query"><img src="static/qual/ego2exo/5c12c6e3_disposable_swab_with_package_0_query.jpg"><div class="cell-label">Query mask<br>(Ego view, first frame)</div></div>
   <div class="qual-video"><video class="sync qual-vid" data-group="qual-ego2exo" src="static/qual/ego2exo/5c12c6e3_disposable_swab_with_package_0.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">XTrack prediction &mdash; Ego view (left) &nbsp;|&nbsp; Exo view (right)</div></div>
 </div></div>
   </div>
