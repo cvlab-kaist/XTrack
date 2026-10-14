@@ -41,10 +41,10 @@ motiv_html = f"""
   {cell('<b>XTrack (Ours)</b>', vid('static/motivation/ours.mp4'), 'ours')}
   {mblock('Exo2Ego &middot; Ego-Exo4D', ['Query: <b>exo</b> view &rarr; prediction: <b>ego</b> view', '<span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines', '2&times; speed'], 'info')}
 
-  {mblock('(a) Track-then-Match', ['&#10007; temporally inconsistent matching', '&#10007; false positives when the target is absent'], 'bad')}
+  {mblock('(a) Track-then-Match', ['<span class="x">&#10007;</span> temporally inconsistent matching', '<span class="x">&#10007;</span> false positives when the target is absent'], 'bad')}
   {''.join(cell(name, vid(f'static/motivation/{m}_sam2qt.mp4')) for m, name in METHODS)}
 
-  {mblock('(b) Match-then-Track', ['&#10007; propagates an unreliable initial match', '&#10007; fails when the object reappears'], 'bad')}
+  {mblock('(b) Match-then-Track', ['<span class="x">&#10007;</span> propagates an unreliable initial match', '<span class="x">&#10007;</span> fails when the object reappears'], 'bad')}
   {''.join(cell(name, vid(f'static/motivation/{m}_ffmsam2.mp4')) for m, name in METHODS)}
 </div>
 """
@@ -129,8 +129,9 @@ html = f'''<!DOCTYPE html>
   .mblock {{ grid-column:span 2; border-radius:8px; padding:.55rem .7rem; font-size:.82rem; line-height:1.35; }}
   .mblock.info {{ background:#eef1f5; }}
   .mblock.bad {{ background:none; padding-left:.2rem; }}
-  .mblock.bad .mtitle {{ font-size:1.7rem; color:var(--ink); line-height:1.2; margin-bottom:.5rem; }}
-  .mblock.bad .mline {{ font-size:1.15rem; color:var(--red); font-weight:600; margin-bottom:.3rem; }}
+  .mblock.bad .mtitle {{ color:var(--ink); }}
+  .mblock.bad .mline {{ color:var(--ink); }}
+  .x {{ color:var(--red); font-weight:700; }}
   .mtitle {{ font-weight:700; font-size:.95rem; margin-bottom:.25rem; }}
   .mline {{ margin-bottom:.15rem; }}
   .mblock .sw {{ display:inline-block; width:10px; height:10px; border-radius:2px; vertical-align:middle; }}

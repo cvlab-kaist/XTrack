@@ -31,8 +31,9 @@
   .mblock { grid-column:span 2; border-radius:8px; padding:.55rem .7rem; font-size:.82rem; line-height:1.35; }
   .mblock.info { background:#eef1f5; }
   .mblock.bad { background:none; padding-left:.2rem; }
-  .mblock.bad .mtitle { font-size:1.7rem; color:var(--ink); line-height:1.2; margin-bottom:.5rem; }
-  .mblock.bad .mline { font-size:1.15rem; color:var(--red); font-weight:600; margin-bottom:.3rem; }
+  .mblock.bad .mtitle { color:var(--ink); }
+  .mblock.bad .mline { color:var(--ink); }
+  .x { color:var(--red); font-weight:700; }
   .mtitle { font-weight:700; font-size:.95rem; margin-bottom:.25rem; }
   .mline { margin-bottom:.15rem; }
   .mblock .sw { display:inline-block; width:10px; height:10px; border-radius:2px; vertical-align:middle; }
@@ -120,10 +121,10 @@
   <div class="cell ours"><video class="sync " data-group="motiv" src="static/motivation/ours.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label"><b>XTrack (Ours)</b></div></div>
   <div class="mblock info"><div class="mtitle">Exo2Ego &middot; Ego-Exo4D</div><div class="mline">Query: <b>exo</b> view &rarr; prediction: <b>ego</b> view</div><div class="mline"><span class="sw" style="background:#1fb84a"></span> GT / query / ours &nbsp; <span class="sw" style="background:#e03131"></span> baselines</div><div class="mline">2&times; speed</div></div>
 
-  <div class="mblock bad"><div class="mtitle">(a) Track-then-Match</div><div class="mline">&#10007; temporally inconsistent matching</div><div class="mline">&#10007; false positives when the target is absent</div></div>
+  <div class="mblock bad"><div class="mtitle">(a) Track-then-Match</div><div class="mline"><span class="x">&#10007;</span> temporally inconsistent matching</div><div class="mline"><span class="x">&#10007;</span> false positives when the target is absent</div></div>
   <div class="cell "><video class="sync " data-group="motiv" src="static/motivation/objectrelator_sam2qt.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">ObjectRelator</div></div><div class="cell "><video class="sync " data-group="motiv" src="static/motivation/omama_sam2qt.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">O-MaMa</div></div><div class="cell "><video class="sync " data-group="motiv" src="static/motivation/lmeec_sam2qt.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">LM-EEC</div></div><div class="cell "><video class="sync " data-group="motiv" src="static/motivation/v2sam_sam2qt.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">V2-SAM</div></div>
 
-  <div class="mblock bad"><div class="mtitle">(b) Match-then-Track</div><div class="mline">&#10007; propagates an unreliable initial match</div><div class="mline">&#10007; fails when the object reappears</div></div>
+  <div class="mblock bad"><div class="mtitle">(b) Match-then-Track</div><div class="mline"><span class="x">&#10007;</span> propagates an unreliable initial match</div><div class="mline"><span class="x">&#10007;</span> fails when the object reappears</div></div>
   <div class="cell "><video class="sync " data-group="motiv" src="static/motivation/objectrelator_ffmsam2.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">ObjectRelator</div></div><div class="cell "><video class="sync " data-group="motiv" src="static/motivation/omama_ffmsam2.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">O-MaMa</div></div><div class="cell "><video class="sync " data-group="motiv" src="static/motivation/lmeec_ffmsam2.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">LM-EEC</div></div><div class="cell "><video class="sync " data-group="motiv" src="static/motivation/v2sam_ffmsam2.mp4" muted playsinline loop preload="metadata"></video><div class="cell-label">V2-SAM</div></div>
 </div>
 </div>
