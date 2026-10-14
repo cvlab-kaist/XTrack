@@ -132,12 +132,12 @@ def s_motiv(t, T):
     paste(img, A['fig1'], (260, 165, 1400, 280), radius=0)
     cells = [('Query (exo)', A['mq'], None), ('Ground truth', None, 'm_gt'), ('XTrack (ours)', None, 'm_ours'),
              ('(a) Track-then-Match', None, 'm_lmeec_sam2qt'), ('(b) Match-then-Track', None, 'm_lmeec_ffmsam2')]
-    x = 96; y = 480; cw = 312; gap = 22
+    x = 96; y = 490; cw = 284; gap = 22
     for k, (lab, im, key) in enumerate(cells):
         a = ease(t, 2.0 + k * 0.5, 0.4)
         if a <= 0: continue
         fr = im if im is not None else vf(A[key], t)
-        box = (x, y, 552 if k == 0 else cw, cw)
+        box = (x, y, 480 if k == 0 else cw, cw)
         r = paste(img, fr, box)
         col = GREEN if k in (1, 2) else RED if k >= 3 else INK
         text(img, (r[0] + r[2] // 2, r[1] + r[3] + 12), lab, 26, 'b', col, anchor='ma')
