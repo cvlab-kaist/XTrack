@@ -56,7 +56,7 @@ def repack_vggt(src, dst, n_max=None):
         row = np.full((250, sum(p.shape[1] for p in panels) + GAP * 3, 3), 255, np.uint8); x = 0
         for p in panels: row[:, x:x + p.shape[1]] = p; x += p.shape[1] + GAP
         out.append(row)
-    encode(out, dst, 15)
+    encode(out, dst, 30)
 
 def to_green(panel):
     """Recolour the red (forward) overlay of a panel to green: used to show the GT anchor the forward pass starts from."""
@@ -89,7 +89,7 @@ def repack_dino(src, dst, n_max=None):
         row = np.full((im.shape[0], 1200 + GAP * 3, 3), 255, np.uint8); x = 0
         for q in panels: row[:, x:x + 300] = q; x += 300 + GAP
         out.append(row)
-    encode(out, dst, 15)
+    encode(out, dst, 30)
 
 if __name__ == '__main__':
     import sys
