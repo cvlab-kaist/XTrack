@@ -242,7 +242,7 @@ html = f'''<!DOCTYPE html>
   <div class="container is-max-widescreen">
     <h2 class="title is-4 section-title has-text-centered">Qualitative results</h2>
     <p class="lead">From a single query mask (left), XTrack predicts the object masks in <b>both</b> the ego and exo videos (right) in one pass.
-    The predicted masks stay on the queried object in both views through viewpoint changes, occlusions and re-appearance, without any per-frame query. Videos are played at 2&times; speed.</p>
+    The predicted masks stay on the queried object in both views through viewpoint changes, occlusions and re-appearance, without any per-frame query.</p>
     <div class="tabs is-toggle is-centered" id="qual-tabs">
       <ul>
         <li class="is-active" data-tab="exo2ego"><a>Exo &rarr; Ego &nbsp;<small>(query in exo view)</small></a></li>

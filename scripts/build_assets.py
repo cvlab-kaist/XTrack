@@ -18,7 +18,7 @@ from pycocotools import mask as mu
 PP = Path('/home/ubuntu/dahyun/_Nips26/project_page'); ST = PP/'static'
 HF = Path('/data3/_Nips26/xtrack_hf'); RES = Path('/data3/_Nips26/result')
 GTANN = Path('/data3/_Nips26/lmeec_gtann_data'); DENSE = Path('/data3/_Nips26/lmeec_data')
-FPS = 30; CRF = '24'
+FPS = 15; CRF = '26'
 GREEN, RED = (0, 200, 0), (0, 0, 230)   # BGR
 
 win = {}
