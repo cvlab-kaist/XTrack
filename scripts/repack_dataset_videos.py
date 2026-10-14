@@ -38,8 +38,21 @@ def repack_vggt(src, dst, n_max=None):
     fr = read(src)[:n_max]; out = []
     for im in fr:
         exo = im[:, 0:444]; ego = [im[:, 444 * k:444 * k + 250] for k in (1, 2, 3)]
-        sel = pick(ego[2]); sel_txt = f'VGGT selection: {sel}' if sel else 'VGGT selection'
-        panels = [band(exo, 'Exo view (query)'), band(ego[0], 'Forward candidate', (120, 120, 255)), band(ego[1], 'Backward candidate', (255, 180, 120)), band(ego[2], sel_txt, (120, 255, 120))]
+        # mask regions = where the forward and backward panels differ (same frame, different overlays)
+        f_, b_, s_ = (x.astype(int) for x in ego)
+        M = np.abs(f_ - b_).sum(2) > 60
+        fwd_has = M.sum() > 25 and ((f_[..., 2] - f_[..., 0])[M] > 40).sum() > 15
+        bwd_has = M.sum() > 25 and ((b_[..., 0] - b_[..., 2])[M] > 40).sum() > 15
+        if M.sum() > 25:
+            rb = (s_[..., 2] - s_[..., 0])[M]  # red minus blue inside the mask region of the selection panel
+            red = (rb > 40).sum(); blue = (rb < -40).sum()
+            sel = 'forward' if (red > 15 and red >= blue and fwd_has) else 'backward' if (blue > 15 and bwd_has) else None
+        else: sel = None
+        sel_txt = f'VGGT selection: {sel}' if sel else 'VGGT selection: no mask'
+        def cand(panel, has, txt, col):
+            return band(panel, txt, col) if has else band(note(panel.copy(), 'no mask'), txt, (190, 190, 190))
+        panels = [band(exo, 'Exo view (query)'), cand(ego[0], fwd_has, 'Forward candidate', (120, 120, 255)), cand(ego[1], bwd_has, 'Backward candidate', (255, 180, 120)),
+                  band(ego[2], sel_txt, (120, 255, 120)) if sel else band(note(ego[2].copy(), 'no mask'), sel_txt, (190, 190, 190))]
         row = np.full((250, sum(p.shape[1] for p in panels) + GAP * 3, 3), 255, np.uint8); x = 0
         for p in panels: row[:, x:x + p.shape[1]] = p; x += p.shape[1] + GAP
         out.append(row)
@@ -54,8 +67,14 @@ def to_green(panel):
 
 def sat(panel): return cv2.cvtColor(panel, cv2.COLOR_BGR2HSV)[..., 1].mean()
 def greyed(panel):
-    g = cv2.cvtColor(cv2.cvtColor(panel, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR); g = (g * 0.45).astype(np.uint8)
-    H, W = g.shape[:2]; cv2.putText(g, 'DISCARDED', (W // 2 - 78, H // 2 + 8), cv2.FONT_HERSHEY_SIMPLEX, 0.85, (60, 60, 230), 2, cv2.LINE_AA); return g
+    g = cv2.cvtColor(cv2.cvtColor(panel, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR); g = (g * 0.4).astype(np.uint8); return g
+def has_mask(panel):
+    b, gch, r = panel[..., 0].astype(int), panel[..., 1].astype(int), panel[..., 2].astype(int)
+    return (((r > 140) & (g_ := gch < 90) & (b < 90)) | ((b > 140) & (r < 90) & (gch < 120))).sum() > 30
+def note(img, txt):
+    H, W = img.shape[:2]; (tw, th), _ = cv2.getTextSize(txt, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+    cv2.rectangle(img, (W // 2 - tw // 2 - 8, H // 2 - th - 6), (W // 2 + tw // 2 + 8, H // 2 + 8), (30, 30, 30), -1)
+    cv2.putText(img, txt, (W // 2 - tw // 2, H // 2), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (210, 210, 210), 1, cv2.LINE_AA); return img
 
 def repack_dino(src, dst, n_max=None):
     fr = read(src)[:n_max]; out = []
@@ -65,7 +84,7 @@ def repack_dino(src, dst, n_max=None):
         p = [im[:, 300 * k:300 * (k + 1)] for k in range(3)]
         # the source renders discarded frames washed-out; detect by saturation drop vs. the forward panel and grey them out strongly
         discard = sat(p[2][40:]) < 0.6 * sat(p[0][40:])
-        chk = band(greyed(p[2]), 'DINOv3 check: discarded', (120, 120, 255)) if discard else band(p[2], 'DINOv3 check vs. anchor', (120, 255, 120))
+        chk = band(note(greyed(p[2]), 'discarded'), 'DINOv3 check: discarded', (190, 190, 190)) if discard else band(p[2], 'DINOv3 check vs. anchor', (120, 255, 120))
         panels = [anchor, band(p[0], 'Forward candidate', (120, 120, 255)), band(p[1], 'Backward candidate', (255, 180, 120)), chk]
         row = np.full((im.shape[0], 1200 + GAP * 3, 3), 255, np.uint8); x = 0
         for q in panels: row[:, x:x + 300] = q; x += 300 + GAP
