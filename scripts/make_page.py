@@ -7,8 +7,10 @@ qual = json.load(open(PP/'static/qual/index.json')) if (PP/'static/qual/index.js
 
 TITLE = 'Repurposing Video Diffusion Transformers for Cross-View Temporal Object Correspondence'
 VENUE = 'NeurIPS 2026'
-AUTHOR_ROWS = [[('Siyoon Jin', '*'), ('Dahyun Chung', '*'), ('Honggyu An', ''), ('Sangbeom Lim', '')],
-               [('Wonjin Nam', ''), ('Jaewoo Jung', ''), ('WonJun Moon', ''), ('Seungryong Kim', '')]]
+AUTHOR_ROWS = [[('Siyoon Jin', '*', 'https://jinsy515.github.io/my-page/'), ('Dahyun Chung', '*', 'https://dhyun22.github.io/'),
+                ('Honggyu An', '', 'https://hg010303.github.io/'), ('Sangbeom Lim', '', 'https://sangbeomlim.github.io/')],
+               [('Wonjin Nam', '', 'https://wjnam6525.github.io/'), ('Jaewoo Jung', '', 'https://crepejung00.github.io/'),
+                ('WonJun Moon', '', 'https://wjun0830.github.io/'), ('Seungryong Kim', '', 'https://cvlab.kaist.ac.kr/home')]]
 ABSTRACT = ('Cross-view object correspondence identifies the same object across views. However, existing methods treat this as a '
             'frame-level matching problem, necessitating a query mask at every frame. Furthermore, without modeling temporal context, '
             'they suffer from severe ambiguity under appearance changes or occlusions. Therefore, we introduce <b>cross-view temporal '
@@ -184,7 +186,7 @@ html = f'''<!DOCTYPE html>
     <div class="container is-max-desktop has-text-centered">
       <h1 class="title publication-title">{TITLE}</h1>
       <div class="authors">
-        {''.join('<span class="arow">' + ''.join(f'<span class="author-block"><a href="#">{n}</a><sup>{s}</sup></span>' for n, s in row) + '</span>' for row in AUTHOR_ROWS)}
+        {''.join('<span class="arow">' + ''.join(f'<span class="author-block"><a href="{u}" target="_blank" rel="noopener">{n}</a><sup>{s}</sup></span>' for n, s, u in row) + '</span>' for row in AUTHOR_ROWS)}
       </div>
       <div class="affil">KAIST AI</div>
       <div class="eq"><sup>*</sup>Equal contribution</div>
