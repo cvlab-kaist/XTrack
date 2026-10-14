@@ -67,7 +67,6 @@ def qual_carousel(direction):
     <button class="button is-small car-prev"><i class="fas fa-chevron-left"></i></button>
     <span class="car-pos">1 / {len(items)}</span>
     <button class="button is-small car-next"><i class="fas fa-chevron-right"></i></button>
-    <label class="car-auto"><input type="checkbox" class="car-autoplay" checked> auto-advance</label>
   </div>
   <div class="thumbs">{thumbs}</div>
 </div>"""
@@ -282,11 +281,6 @@ html = f'''<!DOCTYPE html>
   </div>
 </section>
 
-<footer class="footer" style="padding:1.5rem">
-  <div class="container is-max-desktop has-text-centered">
-    Website template adapted from <a href="https://nerfies.github.io">Nerfies</a>. Videos from Ego-Exo4D.
-  </div>
-</footer>
 
 <script>
 function groupVideos(g) {{ return Array.from(document.querySelectorAll('video.sync[data-group="' + g + '"]')); }}
@@ -322,7 +316,7 @@ document.querySelectorAll('video.lazy').forEach(v => io.observe(v));
 document.querySelectorAll('.carousel').forEach(car => {{
   const items = JSON.parse(car.dataset.items); let k = 0;
   const vid = car.querySelector('.car-vid'), qimg = car.querySelector('.car-qimg'), pos = car.querySelector('.car-pos');
-  const thumbs = Array.from(car.querySelectorAll('.thumb')); const auto = car.querySelector('.car-autoplay');
+  const thumbs = Array.from(car.querySelectorAll('.thumb'));
   function show(n) {{
     k = (n + items.length) % items.length; qimg.src = items[k].q; vid.src = items[k].v; vid.load(); vid.play().catch(()=>{{}});
     pos.textContent = (k + 1) + ' / ' + items.length;
@@ -333,7 +327,7 @@ document.querySelectorAll('.carousel').forEach(car => {{
   car.querySelector('.car-prev').addEventListener('click', () => show(k - 1));
   car.querySelector('.car-next').addEventListener('click', () => show(k + 1));
   thumbs.forEach(t => t.addEventListener('click', () => show(+t.dataset.k)));
-  vid.addEventListener('ended', () => {{ if (auto.checked) show(k + 1); else {{ vid.currentTime = 0; vid.play().catch(()=>{{}}); }} }});
+  vid.loop = true;
   car.showIndex = show; car.pauseVid = () => vid.pause(); car.resumeVid = () => vid.play().catch(()=>{{}});
 }});
 document.querySelectorAll('#qual-tabs li').forEach(li => li.addEventListener('click', () => {{
