@@ -103,6 +103,14 @@
 
 <section class="section pt-0">
   <div class="container is-max-desktop">
+    <h2 class="title is-4 section-title has-text-centered">Overview video</h2>
+    <video class="figure-img" src="static/video/xtrack_explainer.mp4" poster="static/video/xtrack_explainer_poster.jpg" controls playsinline preload="none" style="border-radius:12px;background:#000"></video>
+    <div class="caption">A two-minute overview of the task, the motivation, XTrack, and the pseudo-label curation pipeline (no audio).</div>
+  </div>
+</section>
+
+<section class="section pt-0">
+  <div class="container is-max-desktop">
     <h2 class="title is-4 section-title has-text-centered">Abstract</h2>
     <div class="abstract"><p>Cross-view object correspondence identifies the same object across views. However, existing methods treat this as a frame-level matching problem, necessitating a query mask at every frame. Furthermore, without modeling temporal context, they suffer from severe ambiguity under appearance changes or occlusions. Therefore, we introduce <b>cross-view temporal object correspondence</b>, which requires preserving object identity across both views and time from a query mask. To address this, we propose <b>XTrack</b>, a streamlined framework which repurposes a pretrained video DiT with semantic and spatiotemporal priors for RGB-to-mask latent transport, jointly modeling cross-view matching and temporal tracking. However, naive video DiTs do not guarantee accurate cross-view grounding and often attend to semantically similar yet incorrect objects across views. Thus, we introduce focal cross-view attention alignment, hard negative conditioning, and local context crop strategies to ensure reliable grounding. Finally, beyond these architectural enhancements, we also tackle the lack of dense annotation by introducing a pseudo-label curation pipeline that converts sparse Ego-Exo4D annotations into dense supervision to enable effective video-level training. Our highly competitive performances validate the effectiveness of XTrack as a streamlined framework, ensuring robust temporal consistency and identity preservation.</p></div>
   </div>
