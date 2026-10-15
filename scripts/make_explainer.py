@@ -82,7 +82,7 @@ SCENES = [
  ('results', "From a single query mask, XTrack keeps the object in both views through viewpoint changes, occlusion, and re-appearance, without any per-frame query."),
  ('closing', "Please visit our project page for more results. Thank you."),
 ]
-FIXED = {'title': 5, 'task': 11, 'motivation': 20, 'method': 15, 'grounding': 17, 'curation': 17, 'results': 28, 'closing': 5}  # silent version
+FIXED = {'title': 5, 'task': 7, 'motivation': 20, 'method': 15, 'grounding': 17, 'curation': 17, 'results': 28, 'closing': 5}  # silent version
 PAD = {'title': 1.0, 'task': 1.5, 'motivation': 2.0, 'method': 1.5, 'grounding': 1.5, 'curation': 1.5, 'results': 4.0, 'closing': 1.5}
 
 def synth(no_tts):
@@ -171,14 +171,14 @@ def arrow(d, x0, y0, x1, y1, col=(130, 130, 130), w=3, head=11):
 
 def s_ground(t, T):
     img = canvas(); header(img, 'Enhancing cross-view object grounding'); d = ImageDraw.Draw(img)
-    IL = A['illus']; PAD = 24; PW = 560; GAP = 24; PH = 500; y0 = 160; xs = [96 + k * (PW + GAP) for k in range(3)]
+    IL = A['illus']; PAD = 24; PW = 560; GAP = 24; PH = 545; y0 = 160; xs = [96 + k * (PW + GAP) for k in range(3)]
     titles = ['Focal attention alignment', 'Hard negative conditioning', 'Local context crop']
     descs = ['Cross-view attention is supervised to attend to the query object.',
              'Same-class instances as hard negatives: their predictions are pushed apart by a margin.',
              'Detail tokens from a crop around small objects, with RoPE positions of the full frame.']
     for k, x in enumerate(xs):
         d.rounded_rectangle((x, y0, x + PW, y0 + PH), 18, fill=(248, 249, 250), outline=(229, 229, 229), width=2)
-        text(img, (x + PAD, y0 + 18), titles[k], 29, 'b'); cy = y0 + 70
+        text(img, (x + PAD, y0 + 18), titles[k], 33, 'b'); cy = y0 + 76
         if k == 0:
             paste(img, IL['focal'], (x + PAD, cy, PW - 2 * PAD, 320), radius=0)
         elif k == 1:
@@ -186,11 +186,11 @@ def s_ground(t, T):
             for ri, (qn, tn, lab, col) in enumerate([('hn_query_pos', 'hn_target_pos', 'query: front wheel', (40, 200, 40)), ('hn_query_neg', 'hn_target_neg', 'hard negative: back wheel', (255, 150, 40))]):
                 yy = ys[ri]; r1 = paste(img, IL[qn], (xq, yy, iw, ih), fit='cover', radius=8); r2 = paste(img, IL[tn], (xp, yy, iw, ih), fit='cover', radius=8)
                 d = ImageDraw.Draw(img); arrow(d, r1[0] + iw + 10, yy + ih // 2, r2[0] - 10, yy + ih // 2)
-                chip(img, (r1[0] + 6, yy + 6), lab, col); chip(img, (r2[0] + 6, yy + 6), 'prediction')
+                chip(img, (r1[0] + 6, yy + 6), lab, col, size=18); chip(img, (r2[0] + 6, yy + 6), 'prediction', size=18)
             # the loss acts between the two predictions: vertical double arrow in the gap under the prediction column
             d = ImageDraw.Draw(img); gx = xp + 30; ga, gb = ys[0] + ih + 8, ys[1] - 8
             arrow(d, gx, (ga + gb) // 2, gx, ga, RED, 3, 9); arrow(d, gx, (ga + gb) // 2, gx, gb, RED, 3, 9)
-            text(img, (gx + 16, ga + 6), 'margin loss', 18, 'b', RED); text(img, (gx + 16, ga + 30), 'pushes the two apart', 16, 'r', RED)
+            text(img, (gx + 16, ga + 4), 'margin loss', 21, 'b', RED); text(img, (gx + 16, ga + 32), 'pushes the two apart', 19, 'r', RED)
         else:
             full = IL['lc_full']; crop = IL['lc_crop']; bx, by, bs = IL['lc_box']
             fs_ = 300; r = paste(img, full, (x + PAD, cy, fs_, fs_), radius=8); sc = r[2] / 448
@@ -198,26 +198,26 @@ def s_ground(t, T):
             img.paste(Image.fromarray(cv2.cvtColor(cv2.resize(crop, (cs_, cs_)), cv2.COLOR_BGR2RGB)), (ex0, ey0)); d = ImageDraw.Draw(img)
             tx0, ty0, ts = r[0] + bx * sc, r[1] + by * sc, bs * sc
             d.line((tx0 + ts, ty0, ex0, ey0), fill=YELLOW_PIL, width=2); d.line((tx0 + ts, ty0 + ts, ex0, ey0 + cs_), fill=YELLOW_PIL, width=2)
-            text(img, (ex0 + cs_ // 2, ey0 + cs_ + 8), 'local crop tokens', 17, 'b', (160, 120, 0), anchor='ma')
-        text(img, (x + PAD, y0 + PH - 86), descs[k], 20, 'r', (68, 68, 68), maxw=PW - 2 * PAD, line=1.3)
+            text(img, (ex0 + cs_ // 2, ey0 + cs_ + 8), 'local crop tokens', 20, 'b', (160, 120, 0), anchor='ma')
+        text(img, (x + PAD, y0 + PH - 112), descs[k], 24, 'r', (68, 68, 68), maxw=PW - 2 * PAD, line=1.3)
     # ---- training: 2D pretraining with cycle consistency (schematic with real frames) + video fine-tuning
-    ty = y0 + PH + 26; d = ImageDraw.Draw(img); d.rounded_rectangle((96, ty, 1824, ty + 290), 18, fill=(240, 251, 242), outline=(200, 230, 205), width=2)
-    text(img, (96 + PAD, ty + 16), 'Training', 29, 'b', GREEN)
-    d.ellipse((120, ty + 70, 134, ty + 84), fill=GREEN); text(img, (146, ty + 62), '2D pretraining with cycle consistency', 23, 'b', INK)
-    text(img, (146, ty + 96), 'Paired frames: predict the mask in the other view, then feed it back as the query; the reconstruction must match the original query mask.', 19, 'r', (68, 68, 68), maxw=560, line=1.3)
-    d.ellipse((120, ty + 196, 134, ty + 210), fill=GREEN); text(img, (146, ty + 188), 'Video-level fine-tuning', 23, 'b', INK)
-    text(img, (146, ty + 222), 'On curated dense pseudo-labels.', 19, 'r', (68, 68, 68), maxw=560)
+    ty = y0 + PH + 26; d = ImageDraw.Draw(img); d.rounded_rectangle((96, ty, 1824, ty + 300), 18, fill=(240, 251, 242), outline=(200, 230, 205), width=2)
+    text(img, (96 + PAD, ty + 16), 'Training', 33, 'b', GREEN)
+    d.ellipse((120, ty + 76, 134, ty + 90), fill=GREEN); text(img, (146, ty + 66), '2D pretraining with cycle consistency', 26, 'b', INK)
+    text(img, (146, ty + 104), 'Predict the mask in the other view, feed it back as the query, and recover the original query mask.', 22, 'r', (68, 68, 68), maxw=560, line=1.3)
+    d.ellipse((120, ty + 212, 134, ty + 226), fill=GREEN); text(img, (146, ty + 202), 'Video-level fine-tuning', 26, 'b', INK)
+    text(img, (146, ty + 240), 'On curated dense pseudo-labels.', 22, 'r', (68, 68, 68), maxw=560)
     iw, ih = 230, 130; gy = ty + 50; x1, x2, x3 = 760, 1165, 1570
     r1 = paste(img, IL['hn_query_pos'], (x1, gy, iw, ih), fit='cover', radius=8); r2 = paste(img, IL['hn_target_pos'], (x2, gy, iw, ih), fit='cover', radius=8); r3 = paste(img, IL['hn_query_pos'], (x3, gy, iw, ih), fit='cover', radius=8)
     d = ImageDraw.Draw(img)
-    chip(img, (r1[0] + 6, gy + 6), 'query mask (exo)', (40, 200, 40)); chip(img, (r2[0] + 6, gy + 6), 'predicted mask (ego)'); chip(img, (r3[0] + 6, gy + 6), 'reconstructed query (exo)')
+    chip(img, (r1[0] + 6, gy + 6), 'query mask (exo)', (40, 200, 40), size=18); chip(img, (r2[0] + 6, gy + 6), 'predicted mask (ego)', size=18); chip(img, (r3[0] + 6, gy + 6), 'reconstructed (exo)', size=18)
     arrow(d, r1[0] + iw + 10, gy + ih // 2, r2[0] - 10, gy + ih // 2); arrow(d, r2[0] + iw + 10, gy + ih // 2, r3[0] - 10, gy + ih // 2)
-    text(img, ((r1[0] + iw + r2[0]) // 2, gy + ih // 2 - 28), 'predict', 16, 'b', MUTED, anchor='ma')
-    text(img, ((r2[0] + iw + r3[0]) // 2, gy + ih // 2 - 28), 'feed back as query', 16, 'b', MUTED, anchor='ma')
+    text(img, ((r1[0] + iw + r2[0]) // 2, gy + ih // 2 - 28), 'predict', 19, 'b', MUTED, anchor='ma')
+    text(img, ((r2[0] + iw + r3[0]) // 2, gy + ih // 2 - 28), 'feed back as query', 17, 'b', MUTED, anchor='ma')
     # return arrow underneath: reconstruction compared with the original query
     by_ = gy + ih + 34; d.line((r3[0] + iw // 2, gy + ih + 8, r3[0] + iw // 2, by_), fill=RED, width=3); d.line((r3[0] + iw // 2, by_, r1[0] + iw // 2, by_), fill=RED, width=3)
     arrow(d, r1[0] + iw // 2, by_, r1[0] + iw // 2, gy + ih + 10, RED, 3, 10)
-    text(img, ((r1[0] + r3[0] + iw) // 2, by_ + 8), 'cycle-consistency loss: reconstructed query mask must match the original', 18, 'b', RED, anchor='ma')
+    text(img, ((r1[0] + r3[0] + iw) // 2, by_ + 8), 'cycle-consistency loss: the reconstructed mask must match the original query', 21, 'b', RED, anchor='ma')
     return fade(img, ease(t, 0, 0.4))
 
 def s_curation(t, T):
