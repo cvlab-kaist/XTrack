@@ -14,6 +14,7 @@ OUT = Path('/data3/_Nips26/project_page_vis/explainer'); OUT.mkdir(parents=True,
 TTS = '/data2/envs/_build/ettsvenv/bin/edge-tts'; VOICE = 'en-US-AriaNeural'
 W, H, FPS = 1920, 1080, 30
 F = {k: f'/usr/share/fonts/truetype/liberation2/LiberationSans-{v}.ttf' for k, v in [('r', 'Regular'), ('b', 'Bold'), ('i', 'Italic')]}
+YELLOW_PIL = (230, 180, 0)
 INK, MUTED, GREEN, RED, BLUE, BG = (34, 34, 34), (110, 110, 110), (31, 184, 74), (224, 49, 49), (59, 91, 219), (255, 255, 255)
 
 # ───────────────────────── helpers ─────────────────────────
@@ -35,6 +36,8 @@ def paste(img, arr_bgr, box, fit='contain', radius=14):
     """Paste a BGR frame into box=(x,y,w,h) keeping aspect; returns the pasted rect."""
     x, y, bw, bh = box; h0, w0 = arr_bgr.shape[:2]; s = min(bw / w0, bh / h0) if fit == 'contain' else max(bw / w0, bh / h0)
     nw, nh = int(w0 * s), int(h0 * s); fr = cv2.resize(arr_bgr, (nw, nh), interpolation=cv2.INTER_AREA if s < 1 else cv2.INTER_CUBIC)
+    if fit == 'cover':
+        ox, oy = (nw - bw) // 2, (nh - bh) // 2; fr = fr[oy:oy + bh, ox:ox + bw]; nw, nh = bw, bh
     pil = Image.fromarray(cv2.cvtColor(fr, cv2.COLOR_BGR2RGB))
     if radius:
         m = Image.new('L', (nw, nh), 0); ImageDraw.Draw(m).rounded_rectangle((0, 0, nw - 1, nh - 1), radius, fill=255)
@@ -78,7 +81,7 @@ SCENES = [
  ('results', "From a single query mask, XTrack keeps the object in both views through viewpoint changes, occlusion, and re-appearance, without any per-frame query."),
  ('closing', "Please visit our project page for more results. Thank you."),
 ]
-FIXED = {'title': 5, 'task': 11, 'motivation': 20, 'method': 15, 'grounding': 17, 'curation': 17, 'results': 28, 'closing': 5}  # silent version
+FIXED = {'title': 5, 'task': 11, 'motivation': 20, 'method': 15, 'grounding': 20, 'curation': 17, 'results': 28, 'closing': 5}  # silent version
 PAD = {'title': 1.0, 'task': 1.5, 'motivation': 2.0, 'method': 1.5, 'grounding': 1.5, 'curation': 1.5, 'results': 4.0, 'closing': 1.5}
 
 def synth(no_tts):
@@ -104,6 +107,9 @@ def load_assets():
     for n in ['gt', 'ours', 'v2sam_sam2qt', 'objectrelator_ffmsam2']:
         p = FULL/'motivation'/f'{n}.mp4'; A['m_' + n] = read_video(p if p.exists() else ST/'motivation'/f'{n}.mp4')
     for n in ['vggt_basketball_packed', 'dino_soccer_packed']: A[n] = read_video(ST/'dataset'/f'{n}.mp4')
+    IL = Path('/data3/_Nips26/project_page_vis/explainer/illus'); meta = json.load(open(IL/'meta.json'))
+    A['illus'] = {n: img_bgr(IL/f'{n}.jpg') for n in ['hn_query_pos', 'hn_query_neg', 'hn_target_pos', 'hn_target_neg', 'lc_full', 'lc_crop']}
+    A['illus']['focal'] = img_bgr(IL/'focal.png'); A['illus']['lc_box'] = meta['lc_box']
     A['task'] = qual_item('exo2ego', 'dc1600e9'); A['task_v'] = read_video(PP/A['task']['video']); A['task_q'] = img_bgr(PP/A['task']['query'])
     A['res'] = [qual_item('exo2ego', '2ca53d8d'), qual_item('ego2exo', 'short_ede7b9c1'), qual_item('exo2ego', '9e08e1e7'), qual_item('ego2exo', 'short_6fbe4821')]
     for r in A['res']: r['_v'] = read_video(PP/r['video']); r['_q'] = img_bgr(PP/r['query'])
@@ -156,22 +162,59 @@ def s_method(t, T):
     return fade(img, ease(t, 0, 0.4))
 
 def s_ground(t, T):
-    img = canvas(); header(img, 'Enhancing cross-view object grounding')
-    cards = [('Focal attention alignment', 'Cross-view attention is supervised to land on the query object; the loss acts only when grounding is weak.'),
-             ('Hard negative conditioning', 'The same videos are run with another object\'s mask; a margin loss keeps the two predictions apart.'),
-             ('Local context crop', 'An object-centred crop adds detail tokens for small objects, with RoPE positions from the full frame.')]
-    for k, (ttl, body) in enumerate(cards):
-        a = ease(t, 1.0 + k * 3.2, 0.5)
+    img = canvas(); header(img, 'Enhancing cross-view object grounding'); d = ImageDraw.Draw(img)
+    IL = A['illus']; PW = 560; xs = [96, 96 + PW + 24, 96 + 2 * (PW + 24)]; y0 = 165
+    titles = ['Focal attention alignment', 'Hard negative conditioning', 'Local context crop']
+    for k, x in enumerate(xs):
+        a = ease(t, 0.3 + k * 4.0, 0.5)
         if a <= 0: continue
-        x = 96 + k * 580; d = ImageDraw.Draw(img); d.rounded_rectangle((x, 200, x + 540, 520), 18, fill=(248, 249, 250), outline=(229, 229, 229), width=2)
-        text(img, (x + 28, 228), ttl, 32, 'b'); text(img, (x + 28, 290), body, 26, 'r', (68, 68, 68), maxw=484, line=1.35)
-    a = ease(t, 12.0, 0.6)
+        d.rounded_rectangle((x, y0, x + PW, y0 + 585), 18, fill=(248, 249, 250), outline=(229, 229, 229), width=2)
+        text(img, (x + 24, y0 + 20), titles[k], 31, 'b')
+        tl = t - (0.3 + k * 4.0)
+        if k == 0:
+            # reveal the attention-alignment block top -> bottom (attn map x foreground weight -> focal loss -> aligned map)
+            fo = IL['focal']; h, w = fo.shape[:2]; frac = ease(tl, 0.4, 2.2)
+            box = (x + 40, y0 + 80, PW - 80, 440); r = paste(img, fo, box, radius=0)
+            if frac < 1:  # cover the not-yet-revealed part
+                d.rectangle((r[0], r[1] + int(r[3] * frac), r[0] + r[2], r[1] + r[3]), fill=(248, 249, 250))
+            text(img, (x + 24, y0 + 535), 'Cross-view attention is pulled onto the query object', 22, 'r', (68, 68, 68), maxw=PW - 48)
+        elif k == 1:
+            # row 1: correct query -> prediction; row 2: another object's mask -> different prediction; margin between
+            qa = ease(tl, 0.4, 0.5); na = ease(tl, 1.6, 0.5); ma = ease(tl, 2.8, 0.5)
+            rows = [('hn_query_pos', 'hn_target_pos', 'correct query', GREEN, qa), ('hn_query_neg', 'hn_target_neg', 'another object as query', (255, 140, 0), na)]
+            for ri, (qn, tn, lab, col, aa) in enumerate(rows):
+                if aa <= 0: continue
+                yy = y0 + 80 + ri * 230
+                r1 = paste(img, IL[qn], (x + 24, yy, 236, 160), fit='cover'); r2 = paste(img, IL[tn], (x + 300, yy, 236, 160), fit='cover')
+                d.line((r1[0] + r1[2] + 6, yy + 80, r2[0] - 6, yy + 80), fill=(120, 120, 120), width=3)
+                d.polygon([(r2[0] - 6, yy + 80), (r2[0] - 18, yy + 72), (r2[0] - 18, yy + 88)], fill=(120, 120, 120))
+                text(img, (x + 24, yy + 164), lab, 19, 'b', col); text(img, (x + 300, yy + 164), 'prediction', 19, 'r', MUTED)
+            if ma > 0:
+                yy = y0 + 80 + 160 + 34; text(img, (x + 418, yy), 'margin loss keeps them apart', 19, 'b', RED, anchor='ma')
+            text(img, (x + 24, y0 + 535), 'Prediction must follow the query identity, not saliency', 22, 'r', (68, 68, 68), maxw=PW - 48)
+        else:
+            # the crop box grows out of the full frame into an enlarged crop (tokens keep their original positions)
+            full = IL['lc_full']; crop = IL['lc_crop']; bx, by, bs = IL['lc_box']
+            r = paste(img, full, (x + 24, y0 + 80, 300, 300)); sc = r[2] / 448
+            ca = ease(tl, 1.2, 0.8)
+            if ca > 0:
+                # animate: box rectangle (in full frame) -> enlarged crop at the right
+                tx0, ty0, ts = r[0] + bx * sc, r[1] + by * sc, bs * sc; ex0, ey0, es = x + 340, y0 + 100, 196
+                cx0, cy0, cs_ = tx0 + (ex0 - tx0) * ca, ty0 + (ey0 - ty0) * ca, ts + (es - ts) * ca
+                cr = cv2.resize(crop, (int(cs_), int(cs_)))
+                img.paste(Image.fromarray(cv2.cvtColor(cr, cv2.COLOR_BGR2RGB)), (int(cx0), int(cy0)))
+                if ca >= 1:
+                    d.line((tx0 + ts, ty0, ex0, ey0), fill=YELLOW_PIL, width=2); d.line((tx0 + ts, ty0 + ts, ex0, ey0 + es), fill=YELLOW_PIL, width=2)
+                    text(img, (ex0, ey0 + es + 10), 'extra tokens, RoPE positions', 19, 'b', (160, 120, 0)); text(img, (ex0, ey0 + es + 36), 'taken from the full frame', 19, 'b', (160, 120, 0))
+            text(img, (x + 24, y0 + 400), 'Small objects occupy only a few tokens', 21, 'r', MUTED)
+            text(img, (x + 24, y0 + 535), 'An object-centred crop adds fine detail without losing where it is', 22, 'r', (68, 68, 68), maxw=PW - 48)
+    a = ease(t, 13.0, 0.6)
     if a > 0:
-        d = ImageDraw.Draw(img); d.rounded_rectangle((96, 580, 1824, 1000), 18, fill=(240, 251, 242), outline=(200, 230, 205), width=2)
-        text(img, (124, 606), 'Training', 32, 'b', GREEN)
-        text(img, (124, 668), '2D pretraining with cycle consistency: predict the other view from paired frames, map it back, and recover the query mask', 27, 'r', maxw=1000)
-        text(img, (124, 760), 'Video-level fine-tuning on curated dense pseudo-labels', 27, 'r', maxw=1000)
-        r3 = paste(img, A['fig3'], (1180, 600, 620, 340), radius=0); caption(img, (r3[0] + r3[2] // 2, r3[1] + r3[3] + 10), '2D pretraining with cycle consistency', 24)
+        d.rounded_rectangle((96, 780, 1824, 1010), 18, fill=(240, 251, 242), outline=(200, 230, 205), width=2)
+        text(img, (124, 800), 'Training', 30, 'b', GREEN)
+        text(img, (124, 850), '2D pretraining with cycle consistency: predict the other view from paired frames, map it back, and recover the query mask', 25, 'r', maxw=1050)
+        text(img, (124, 930), 'Video-level fine-tuning on curated dense pseudo-labels', 25, 'r', maxw=1050)
+        r3 = paste(img, A['fig3'], (1240, 790, 560, 180), radius=0); caption(img, (r3[0] + r3[2] // 2, r3[1] + r3[3] + 6), '2D pretraining with cycle consistency', 20)
     return fade(img, ease(t, 0, 0.4))
 
 def s_curation(t, T):
