@@ -8,15 +8,14 @@ def dec(r): return mu.decode({'size': r['size'], 'counts': r['counts'].encode()}
 def paint(img, m, color, alpha=0.5, th=3):
     out = img.copy(); out[m] = (img[m] * (1 - alpha) + np.array(color) * alpha).astype(np.uint8)
     cs, _ = cv2.findContours(m.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE); return cv2.drawContours(out, cs, -1, color, th)
-# --- hard negative: same ego/exo frame, correct query (chopping board) vs. a mismatched query (black pepper container)
-u = '2ca53d8d-0120-4dad-a856-c8f20aaa2cc4'; g = json.load(open(G/u/'final_total_refined_masks_rle.json')); f = 3120
-EXO, EGO, POS, NEG = 'cam01', 'aria01_214-1', 'chopping board_0', 'black pepper container_0'
+# --- hard negative: similar-class distractor. query = front wheel (correct) vs. back wheel (mismatched), same frame
+u = 'c692c40e'; u = [d for d in G.iterdir() if d.name.startswith(u)][0].name; g = json.load(open(G/u/'final_total_refined_masks_rle.json')); f = 1050
+EXO, EGO, POS, NEG = 'cam01', 'aria04_214-1', 'front wheel_0', 'back wheel_0'
 exo = cv2.imread(str(G/u/EXO/'frames'/f'{f}.jpg')); ego = cv2.imread(str(G/u/EGO/'frames'/f'{f}.jpg'))
 cv2.imwrite(str(OUT/'hn_query_pos.jpg'), paint(exo, dec(g[EXO][POS][str(f)]), GREEN))
 cv2.imwrite(str(OUT/'hn_query_neg.jpg'), paint(exo, dec(g[EXO][NEG][str(f)]), ORANGE))
 cv2.imwrite(str(OUT/'hn_target_pos.jpg'), paint(ego, dec(g[EGO][POS][str(f)]), GREEN))
 cv2.imwrite(str(OUT/'hn_target_neg.jpg'), paint(ego, dec(g[EGO][NEG][str(f)]), ORANGE))
-cv2.imwrite(str(OUT/'hn_target_plain.jpg'), ego)
 # --- local context crop: small object (hoop) in the ego view; full frame with box + enlarged crop
 u2 = 'b63d213f-25ae-41bb-8719-01efd84dbe17'; g2 = json.load(open(G/u2/'final_total_refined_masks_rle.json'))
 best = None

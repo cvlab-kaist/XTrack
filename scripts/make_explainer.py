@@ -35,9 +35,10 @@ def text(img, xy, s, size=40, w='r', fill=INK, anchor='la', maxw=None, line=1.25
 def paste(img, arr_bgr, box, fit='contain', radius=14):
     """Paste a BGR frame into box=(x,y,w,h) keeping aspect; returns the pasted rect."""
     x, y, bw, bh = box; h0, w0 = arr_bgr.shape[:2]; s = min(bw / w0, bh / h0) if fit == 'contain' else max(bw / w0, bh / h0)
-    nw, nh = int(w0 * s), int(h0 * s); fr = cv2.resize(arr_bgr, (nw, nh), interpolation=cv2.INTER_AREA if s < 1 else cv2.INTER_CUBIC)
+    nw, nh = (int(np.ceil(w0 * s)), int(np.ceil(h0 * s))) if fit == 'cover' else (int(w0 * s), int(h0 * s))
+    fr = cv2.resize(arr_bgr, (nw, nh), interpolation=cv2.INTER_AREA if s < 1 else cv2.INTER_CUBIC)
     if fit == 'cover':
-        ox, oy = (nw - bw) // 2, (nh - bh) // 2; fr = fr[oy:oy + bh, ox:ox + bw]; nw, nh = bw, bh
+        ox, oy = (nw - bw) // 2, (nh - bh) // 2; fr = fr[oy:oy + bh, ox:ox + bw]; nh, nw = fr.shape[:2]
     pil = Image.fromarray(cv2.cvtColor(fr, cv2.COLOR_BGR2RGB))
     if radius:
         m = Image.new('L', (nw, nh), 0); ImageDraw.Draw(m).rounded_rectangle((0, 0, nw - 1, nh - 1), radius, fill=255)
@@ -163,37 +164,42 @@ def s_method(t, T):
 
 def s_ground(t, T):
     img = canvas(); header(img, 'Enhancing cross-view object grounding'); d = ImageDraw.Draw(img)
-    IL = A['illus']; PW = 560; xs = [96, 96 + PW + 24, 96 + 2 * (PW + 24)]; y0 = 160; PH = 505
+    IL = A['illus']; PAD = 24; PW = 560; GAP = 24; PH = 520; y0 = 160; xs = [96 + k * (PW + GAP) for k in range(3)]
     titles = ['Focal attention alignment', 'Hard negative conditioning', 'Local context crop']
+    descs = ['Cross-view attention is supervised to attend to the query object.',
+             'A query of a similar object must give a different prediction, so the output follows the query identity.',
+             'A crop around a small object adds detail tokens; their RoPE positions come from the full frame.']
     for k, x in enumerate(xs):
         d.rounded_rectangle((x, y0, x + PW, y0 + PH), 18, fill=(248, 249, 250), outline=(229, 229, 229), width=2)
-        text(img, (x + 24, y0 + 18), titles[k], 30, 'b')
+        text(img, (x + PAD, y0 + 18), titles[k], 29, 'b')
+        cy = y0 + 70  # content top
         if k == 0:
-            paste(img, IL['focal'], (x + 50, y0 + 70, PW - 100, 330), radius=0)
-            text(img, (x + 24, y0 + 440), 'Cross-view attention is supervised to attend to the query object', 21, 'r', (68, 68, 68), maxw=PW - 48)
+            paste(img, IL['focal'], (x + PAD, cy, PW - 2 * PAD, 320), radius=0)
         elif k == 1:
-            rows = [('hn_query_pos', 'hn_target_pos', 'correct query M_pos', GREEN), ('hn_query_neg', 'hn_target_neg', 'mismatched query M_neg', (255, 140, 0))]
+            iw, ih = 240, 135; xq, xp = x + PAD, x + PW - PAD - iw
+            rows = [('hn_query_pos', 'hn_target_pos', 'query: front wheel', GREEN), ('hn_query_neg', 'hn_target_neg', 'mismatched query: back wheel', (235, 125, 0))]
             for ri, (qn, tn, lab, col) in enumerate(rows):
-                yy = y0 + 62 + ri * 200
-                r1 = paste(img, IL[qn], (x + 24, yy, 236, 134), fit='cover'); r2 = paste(img, IL[tn], (x + 300, yy, 236, 134), fit='cover')
-                d.line((r1[0] + r1[2] + 6, yy + 67, r2[0] - 6, yy + 67), fill=(120, 120, 120), width=3)
-                d.polygon([(r2[0] - 6, yy + 67), (r2[0] - 18, yy + 59), (r2[0] - 18, yy + 75)], fill=(120, 120, 120))
-                text(img, (x + 24, yy + 138), lab, 18, 'b', col); text(img, (x + 300, yy + 138), 'prediction', 18, 'r', MUTED)
-            text(img, (x + 300 + 118, y0 + 62 + 164), 'margin loss: predictions', 17, 'b', RED, anchor='ma'); text(img, (x + 300 + 118, y0 + 62 + 182), 'must differ', 17, 'b', RED, anchor='ma')
-            text(img, (x + 24, y0 + 440), 'Penalizes similar predictions under different queries, so the output depends on the query identity, not on object saliency', 20, 'r', (68, 68, 68), maxw=PW - 48, line=1.2)
+                yy = cy + ri * 190
+                r1 = paste(img, IL[qn], (xq, yy, iw, ih), fit='cover', radius=8); r2 = paste(img, IL[tn], (xp, yy, iw, ih), fit='cover', radius=8)
+                ax0, ax1, ay = r1[0] + iw + 8, r2[0] - 8, yy + ih // 2
+                d.line((ax0, ay, ax1, ay), fill=(140, 140, 140), width=3); d.polygon([(ax1, ay), (ax1 - 12, ay - 7), (ax1 - 12, ay + 7)], fill=(140, 140, 140))
+                text(img, (xq, yy + ih + 6), lab, 17, 'b', col); text(img, (xp, yy + ih + 6), 'prediction', 17, 'r', MUTED)
+            text(img, (xp + iw // 2, cy + ih + 36), 'margin loss: must differ', 17, 'b', RED, anchor='ma')
         else:
             full = IL['lc_full']; crop = IL['lc_crop']; bx, by, bs = IL['lc_box']
-            r = paste(img, full, (x + 24, y0 + 66, 300, 300)); sc = r[2] / 448
-            tx0, ty0, ts = r[0] + bx * sc, r[1] + by * sc, bs * sc; ex0, ey0, es = x + 340, y0 + 80, 196
-            img.paste(Image.fromarray(cv2.cvtColor(cv2.resize(crop, (es, es)), cv2.COLOR_BGR2RGB)), (ex0, ey0)); d = ImageDraw.Draw(img)
-            d.line((tx0 + ts, ty0, ex0, ey0), fill=YELLOW_PIL, width=2); d.line((tx0 + ts, ty0 + ts, ex0, ey0 + es), fill=YELLOW_PIL, width=2)
-            text(img, (ex0, ey0 + es + 10), 'extra tokens with RoPE', 18, 'b', (160, 120, 0)); text(img, (ex0, ey0 + es + 34), 'positions of the full frame', 18, 'b', (160, 120, 0))
-            text(img, (x + 24, y0 + 440), 'An object-centred crop adds fine detail for small objects without losing where they are', 20, 'r', (68, 68, 68), maxw=PW - 48, line=1.2)
-    d.rounded_rectangle((96, 695, 1824, 1040), 18, fill=(240, 251, 242), outline=(200, 230, 205), width=2)
-    text(img, (124, 716), 'Training', 30, 'b', GREEN)
-    text(img, (124, 770), '2D pretraining with cycle consistency: predict the other view from paired frames, map it back, and recover the query mask', 25, 'r', maxw=900)
-    text(img, (124, 880), 'Video-level fine-tuning on curated dense pseudo-labels', 25, 'r', maxw=900)
-    r3 = paste(img, A['fig3'], (1090, 706, 710, 290), radius=0); caption(img, (r3[0] + r3[2] // 2, r3[1] + r3[3] + 6), '2D pretraining with cycle consistency', 22)
+            fs_ = 300; r = paste(img, full, (x + PAD, cy, fs_, fs_), radius=8); sc = r[2] / 448
+            cs_ = 190; ex0, ey0 = x + PW - PAD - cs_, cy + 8
+            img.paste(Image.fromarray(cv2.cvtColor(cv2.resize(crop, (cs_, cs_)), cv2.COLOR_BGR2RGB)), (ex0, ey0)); d = ImageDraw.Draw(img)
+            tx0, ty0, ts = r[0] + bx * sc, r[1] + by * sc, bs * sc
+            d.line((tx0 + ts, ty0, ex0, ey0), fill=YELLOW_PIL, width=2); d.line((tx0 + ts, ty0 + ts, ex0, ey0 + cs_), fill=YELLOW_PIL, width=2)
+            text(img, (ex0 + cs_ // 2, ey0 + cs_ + 8), 'local crop tokens', 17, 'b', (160, 120, 0), anchor='ma')
+        text(img, (x + PAD, y0 + PH - 90), descs[k], 21, 'r', (68, 68, 68), maxw=PW - 2 * PAD, line=1.3)
+    # training block
+    ty = y0 + PH + 28; d.rounded_rectangle((96, ty, 1824, 1040), 18, fill=(240, 251, 242), outline=(200, 230, 205), width=2)
+    text(img, (96 + PAD, ty + 18), 'Training', 29, 'b', GREEN)
+    text(img, (96 + PAD, ty + 72), '2D pretraining with cycle consistency: predict the other view from paired frames, map it back, and recover the query mask.', 23, 'r', maxw=880, line=1.35)
+    text(img, (96 + PAD, ty + 170), 'Video-level fine-tuning on curated dense pseudo-labels.', 23, 'r', maxw=880)
+    r3 = paste(img, A['fig3'], (1090, ty + 14, 710, 1040 - ty - 50), radius=0); caption(img, (r3[0] + r3[2] // 2, r3[1] + r3[3] + 6), '2D pretraining with cycle consistency', 20)
     return fade(img, ease(t, 0, 0.4))
 
 def s_curation(t, T):
