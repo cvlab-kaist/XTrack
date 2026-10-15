@@ -101,11 +101,11 @@ def load_assets():
     A['fig1'] = img_bgr(ST/'images/fig1_paradigms.png'); A['fig2'] = img_bgr(ST/'images/fig2_architecture.png')
     A['fig3'] = img_bgr(ST/'images/fig3_cycle.png'); A['fig4'] = img_bgr(ST/'images/fig4_pseudolabel.png')
     A['mq'] = img_bgr(ST/'motivation/query.jpg')
-    for n in ['gt', 'ours', 'lmeec_sam2qt', 'lmeec_ffmsam2', 'v2sam_sam2qt', 'v2sam_ffmsam2']:
+    for n in ['gt', 'ours', 'v2sam_sam2qt', 'objectrelator_ffmsam2']:
         p = FULL/'motivation'/f'{n}.mp4'; A['m_' + n] = read_video(p if p.exists() else ST/'motivation'/f'{n}.mp4')
     for n in ['vggt_basketball_packed', 'dino_soccer_packed']: A[n] = read_video(ST/'dataset'/f'{n}.mp4')
-    A['task'] = qual_item('exo2ego', '2ca53d8d'); A['task_v'] = read_video(PP/A['task']['video']); A['task_q'] = img_bgr(PP/A['task']['query'])
-    A['res'] = [qual_item('exo2ego', 'dc1600e9'), qual_item('ego2exo', '4d799166'), qual_item('exo2ego', '9e08e1e7'), qual_item('ego2exo', 'short_6fbe4821')]
+    A['task'] = qual_item('exo2ego', 'dc1600e9'); A['task_v'] = read_video(PP/A['task']['video']); A['task_q'] = img_bgr(PP/A['task']['query'])
+    A['res'] = [qual_item('exo2ego', '2ca53d8d'), qual_item('ego2exo', 'short_ede7b9c1'), qual_item('exo2ego', '9e08e1e7'), qual_item('ego2exo', 'short_6fbe4821')]
     for r in A['res']: r['_v'] = read_video(PP/r['video']); r['_q'] = img_bgr(PP/r['query'])
 
 # ───────────────────────── scenes ─────────────────────────
@@ -131,7 +131,7 @@ def s_motiv(t, T):
     img = canvas(); header(img, 'Why joint view-time prediction?')
     paste(img, A['fig1'], (260, 165, 1400, 280), radius=0)
     cells = [('Query (exo)', A['mq'], None), ('Ground truth', None, 'm_gt'), ('XTrack (ours)', None, 'm_ours'),
-             ('(a) Track-then-Match', None, 'm_lmeec_sam2qt'), ('(b) Match-then-Track', None, 'm_lmeec_ffmsam2')]
+             ('(a) Track-then-Match', None, 'm_v2sam_sam2qt'), ('(b) Match-then-Track', None, 'm_objectrelator_ffmsam2')]
     x = 96; y = 490; cw = 284; gap = 22
     for k, (lab, im, key) in enumerate(cells):
         a = ease(t, 2.0 + k * 0.5, 0.4)
@@ -156,7 +156,7 @@ def s_method(t, T):
     return fade(img, ease(t, 0, 0.4))
 
 def s_ground(t, T):
-    img = canvas(); header(img, 'Reliable grounding and two-stage training')
+    img = canvas(); header(img, 'Enhancing cross-view object grounding')
     cards = [('Focal attention alignment', 'Cross-view attention is supervised to land on the query object; the loss acts only when grounding is weak.'),
              ('Hard negative conditioning', 'The same videos are run with another object\'s mask; a margin loss keeps the two predictions apart.'),
              ('Local context crop', 'An object-centred crop adds detail tokens for small objects, with RoPE positions from the full frame.')]
@@ -168,10 +168,10 @@ def s_ground(t, T):
     a = ease(t, 12.0, 0.6)
     if a > 0:
         d = ImageDraw.Draw(img); d.rounded_rectangle((96, 580, 1824, 1000), 18, fill=(240, 251, 242), outline=(200, 230, 205), width=2)
-        text(img, (124, 606), 'Two-stage training', 32, 'b', GREEN)
-        text(img, (124, 668), 'Stage 1: paired frames with a cycle-consistency loss - predict the other view, map back, recover the query mask', 27, 'r', maxw=1000)
-        text(img, (124, 760), 'Stage 2: video-level fine-tuning on curated dense pseudo-labels', 27, 'r', maxw=1000)
-        paste(img, A['fig3'], (1180, 600, 620, 380), radius=0)
+        text(img, (124, 606), 'Training', 32, 'b', GREEN)
+        text(img, (124, 668), '2D pretraining with cycle consistency: predict the other view from paired frames, map it back, and recover the query mask', 27, 'r', maxw=1000)
+        text(img, (124, 760), 'Video-level fine-tuning on curated dense pseudo-labels', 27, 'r', maxw=1000)
+        r3 = paste(img, A['fig3'], (1180, 600, 620, 340), radius=0); caption(img, (r3[0] + r3[2] // 2, r3[1] + r3[3] + 10), '2D pretraining with cycle consistency', 24)
     return fade(img, ease(t, 0, 0.4))
 
 def s_curation(t, T):
