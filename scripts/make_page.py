@@ -7,10 +7,10 @@ qual = json.load(open(PP/'static/qual/index.json')) if (PP/'static/qual/index.js
 
 TITLE = 'Repurposing Video Diffusion Transformers for Cross-View Temporal Object Correspondence'
 VENUE = 'NeurIPS 2026'
-AUTHOR_ROWS = [[('Siyoon Jin', '*', 'https://jinsy515.github.io/my-page/'), ('Dahyun Chung', '*', 'https://dhyun22.github.io/'),
-                ('Honggyu An', '', 'https://hg010303.github.io/'), ('Sangbeom Lim', '', 'https://sangbeomlim.github.io/')],
-               [('Wonjin Nam', '', 'https://wjnam6525.github.io/'), ('Jaewoo Jung', '', 'https://crepejung00.github.io/'),
-                ('WonJun Moon', '', 'https://wjun0830.github.io/'), ('Seungryong Kim', '', 'https://cvlab.kaist.ac.kr/home')]]
+AUTHOR_ROWS = [[('Siyoon Jin', '*1', 'https://jinsy515.github.io/my-page/'), ('Dahyun Chung', '*1', 'https://dhyun22.github.io/'),
+                ('Honggyu An', '1', 'https://hg010303.github.io/'), ('Sangbeom Lim', '2', 'https://sangbeomlim.github.io/')],
+               [('Wonjin Nam', '1', 'https://wjnam6525.github.io/'), ('Jaewoo Jung', '1', 'https://crepejung00.github.io/'),
+                ('WonJun Moon', '1', 'https://wjun0830.github.io/'), ('Seungryong Kim', '1', 'https://cvlab.kaist.ac.kr/home')]]
 ABSTRACT = ('Cross-view object correspondence identifies the same object across views. However, existing methods treat this as a '
             'frame-level matching problem, necessitating a query mask at every frame. Furthermore, without modeling temporal context, '
             'they suffer from severe ambiguity under appearance changes or occlusions. Therefore, we introduce <b>cross-view temporal '
@@ -206,7 +206,7 @@ html = f'''<!DOCTYPE html>
       <div class="authors">
         {''.join('<span class="arow">' + ''.join(f'<span class="author-block"><a href="{u}" target="_blank" rel="noopener">{n}</a><sup>{s}</sup></span>' for n, s, u in row) + '</span>' for row in AUTHOR_ROWS)}
       </div>
-      <div class="affil">KAIST AI</div>
+      <div class="affil"><sup>1</sup>KAIST AI &nbsp;&nbsp; <sup>2</sup>Korea University</div>
       <div class="eq"><sup>*</sup>Equal contribution</div>
       <div class="venue">{VENUE}</div>
       <div class="link-block" style="margin-top:1rem">

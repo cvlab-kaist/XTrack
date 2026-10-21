@@ -1,18 +1,18 @@
 <h2 align="center"><strong>Repurposing Video Diffusion Transformers for Cross-View Temporal Object Correspondence</strong></h2>
 
 <p align="center">
-<a href="https://jinsy515.github.io/my-page/" target="_blank">Siyoon Jin</a><sup>*</sup>,
-<a href="https://dhyun22.github.io/" target="_blank">Dahyun Chung</a><sup>*</sup>,
-<a href="https://hg010303.github.io/" target="_blank">Honggyu An</a>,
-<a href="https://sangbeomlim.github.io/" target="_blank">Sangbeom Lim</a>,<br>
-<a href="https://wjnam6525.github.io/" target="_blank">Wonjin Nam</a>,
-<a href="https://crepejung00.github.io/" target="_blank">Jaewoo Jung</a>,
-<a href="https://wjun0830.github.io/" target="_blank">WonJun Moon</a>,
-<a href="https://cvlab.kaist.ac.kr/home" target="_blank">Seungryong Kim</a>
+<a href="https://jinsy515.github.io/my-page/" target="_blank">Siyoon Jin</a><sup>*1</sup>,
+<a href="https://dhyun22.github.io/" target="_blank">Dahyun Chung</a><sup>*1</sup>,
+<a href="https://hg010303.github.io/" target="_blank">Honggyu An</a><sup>1</sup>,
+<a href="https://sangbeomlim.github.io/" target="_blank">Sangbeom Lim</a><sup>2</sup>,<br>
+<a href="https://wjnam6525.github.io/" target="_blank">Wonjin Nam</a><sup>1</sup>,
+<a href="https://crepejung00.github.io/" target="_blank">Jaewoo Jung</a><sup>1</sup>,
+<a href="https://wjun0830.github.io/" target="_blank">WonJun Moon</a><sup>1</sup>,
+<a href="https://cvlab.kaist.ac.kr/home" target="_blank">Seungryong Kim</a><sup>1</sup>
 </p>
 
 <p align="center">
-KAIST AI<br>
+<sup>1</sup>KAIST AI, <sup>2</sup>Korea University<br>
 <sup>*</sup> Equal contribution
 </p>
 

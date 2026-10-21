@@ -73,7 +73,7 @@ def bullets(img, x, y, items, t, t0, size=34, gap=1.5, maxw=1100, stagger=0.9):
 
 # ───────────────────────── narration ─────────────────────────
 SCENES = [
- ('title', "XTrack: Repurposing Video Diffusion Transformers for Cross-View Temporal Object Correspondence. A NeurIPS 2026 paper from KAIST AI."),
+ ('title', "XTrack: Repurposing Video Diffusion Transformers for Cross-View Temporal Object Correspondence. A NeurIPS 2026 paper from KAIST AI and Korea University."),
  ('task', "Given an ego video, an exo video, and a single first-frame query mask in one view, the goal is to recover temporally coherent masks of the same object in both views. We call this task cross-view temporal object correspondence."),
  ('motivation', "Existing frame-level matchers must be combined with a tracker. Track-then-match propagates the query and matches every frame independently, which produces temporally inconsistent matches and false positives when the object is absent. Match-then-track commits to one initial match and tracks each view on its own, so an unreliable match propagates and the object is lost once it reappears. XTrack instead predicts both views jointly over time."),
  ('method', "XTrack repurposes a pretrained video diffusion transformer. The ego and exo videos are placed side by side and fed as one input, and flow matching transports the RGB latents directly to mask latents. Cross-view matching and within-view tracking happen in the same attention, so evidence from one view resolves ambiguity in the other."),
@@ -121,9 +121,9 @@ def s_title(t, T):
     text(img, (W // 2, 330), 'NeurIPS 2026', 40, 'b', BLUE, anchor='ma')
     y = text(img, (W // 2, 410), 'Repurposing Video Diffusion Transformers for', 62, 'b', anchor='ma')
     text(img, (W // 2, y + 6), 'Cross-View Temporal Object Correspondence', 62, 'b', anchor='ma')
-    text(img, (W // 2, 620), 'Siyoon Jin*   Dahyun Chung*   Honggyu An   Sangbeom Lim', 34, 'r', MUTED, anchor='ma')
-    text(img, (W // 2, 670), 'Wonjin Nam   Jaewoo Jung   WonJun Moon   Seungryong Kim', 34, 'r', MUTED, anchor='ma')
-    text(img, (W // 2, 740), 'KAIST AI', 34, 'b', INK, anchor='ma')
+    text(img, (W // 2, 620), 'Siyoon Jin*¹   Dahyun Chung*¹   Honggyu An¹   Sangbeom Lim²', 34, 'r', MUTED, anchor='ma')
+    text(img, (W // 2, 670), 'Wonjin Nam¹   Jaewoo Jung¹   WonJun Moon¹   Seungryong Kim¹', 34, 'r', MUTED, anchor='ma')
+    text(img, (W // 2, 740), '¹KAIST AI     ²Korea University', 34, 'b', INK, anchor='ma')
     return fade(img, a)
 
 def s_task(t, T):
